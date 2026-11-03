@@ -179,6 +179,17 @@ const dingJuTable={
 };
 const yangTerms=["冬至","小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种"];
 
+// ========== 蓝球1-16五行归属（河洛数理：1/6水 2/7火 3/8木 4/9金 5/0土 循环）==========
+const BLUE_WX={};
+for(let n=1;n<=16;n++){
+  const tail=n%10;
+  if(tail===1||tail===6) BLUE_WX[n]="水";
+  else if(tail===2||tail===7) BLUE_WX[n]="火";
+  else if(tail===3||tail===8) BLUE_WX[n]="木";
+  else if(tail===4||tail===9) BLUE_WX[n]="金";
+  else BLUE_WX[n]="土";
+}
+
 // ========== 辅助函数 ==========
 function getSolarTerm(d){const m=d.getMonth()+1,dd=d.getDate();let b=null,bd=999;for(let s of solarTerms){let df=Math.abs((m-s.m)*31+(dd-s.d));if(df<bd){bd=df;b=s;}}return b.name;}
 function getSeasonWuxing(st){if(["立春","雨水","惊蛰","清明","谷雨"].includes(st))return"木";if(["立夏","小满","芒种","小暑","大暑"].includes(st))return"火";if(["立秋","处暑","白露","秋分","寒露"].includes(st))return"金";if(["立冬","小雪","大雪","冬至","小寒"].includes(st))return"水";return"土";}
@@ -192,6 +203,17 @@ function getLiuHePartnerGongs(dayZhi){
 const partner=LIUHE_MAP[dayZhi];if(!partner)return[];
 const gdm={1:["子"],2:["未","申"],3:["卯"],4:["辰","巳"],5:[],6:["戌","亥"],7:["酉"],8:["丑","寅"],9:["午"]};
 let r=[];for(let g=1;g<=9;g++){if(gdm[g]&&gdm[g].includes(partner))r.push(g);}return r;
+}
+
+// ========== 确定性伪随机（日期做种子，同输入同结果）==========
+function seededRandom(seedStr){
+  let h=2166136261;
+  const s=String(seedStr);
+  for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+  return function(){
+    h+=0x6D2B79F5;let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
 }
 
 // ========== 排盘（拆补法+九星旋转）==========
@@ -230,7 +252,6 @@ for(let i=0;i<8;i++){
     else posIdx=(zfPosIdx-i+8)%8;
     rotatedXing[GONG_ORDER[posIdx]]=xingSeq[i];
 }
-// 5宫固定天禽星
 rotatedXing[5]="禽";
 
 const menBase=["休","死","伤","杜","开","惊","生","景"];
@@ -256,7 +277,6 @@ for(let g=1;g<=9;g++){
     let meta=palaceMeta[g];
     let rx=rotatedXing[g]||meta.origXing;
     let xwx=XING_WUXING[rx];
-    // 伏吟判断：星在原始宫位
     let fuyin=(rx===meta.origXing);
     let wangxiang=false;
     if(xwx===seasonWX)wangxiang=true;
@@ -280,10 +300,10 @@ for(let g=1;g<=9;g++){
         score:0
     };
 }
-return{palaceData,gz,hourGan,zhiFuGong,zhiShiGong,ju,yangDun,xunName,solarTerm,yuan,kongGongList,chongGongList};
+return{palaceData,gz,hourGan,zhiFuGong,zhiShiGong,ju,yangDun,xunName,solarTerm,yuan,kongGongList,chongGongList,baseWx:ganWuxing[gz.dayGan]};
 }
 
-// ========== 生子救母评分（修正版：包含5宫）==========
+// ========== 生子救母评分（红球用：星宫作用关系不变）==========
 function calcShengZiScore(palaceData,gz,hourGan,zhiFuGong){
 let baseWx=ganWuxing[gz.dayGan];
 
@@ -317,10 +337,50 @@ for(let g=1;g<=9;g++){
 }
 }
 
-// ========== 号码收集（修正版：+10, +20, +30递推）==========
-function collectNumbers(palaceData,useXianTian,kongGongList,cfg){
+// ========== 前区号码自身条件优选（按和值/三区/奇偶加权）==========
+function refineFrontPool(frontRaw, palaceData, selectedPalaces, baseWx){
+  const cfg=GAME_CFG[currentGame];
+  const recent30=ssqData.slice(0,30);
+  const avgSum=recent30.length?Math.round(recent30.map(d=>d.nums.reduce((a,b)=>a+b,0)).reduce((a,b)=>a+b,0)/recent30.length):100;
+  const avgSpan=recent30.length?Math.round(recent30.map(d=>Math.max(...d.nums)-Math.min(...d.nums)).reduce((a,b)=>a+b,0)/recent30.length):25;
+
+  // 统计每个号码被哪些宫衍生出（跨宫次数）
+  const numFreq={};
+  frontRaw.forEach(n=>{numFreq[n]=(numFreq[n]||0)+1;});
+
+  const weighted=frontRaw.map(n=>{
+    // 基础权重：来源宫位的绝对价值分
+    let w=0;
+    for(const g of selectedPalaces){
+      const p=palaceData[g];
+      if(p && Math.abs(p.score)>w) w=Math.abs(p.score);
+    }
+    // 1) 单号对和值的贡献估算：越靠近均值结构越优
+    const estSum=n*6;
+    const sumFit=1-Math.min(1,Math.abs(estSum-avgSum)/avgSum);
+    w+=sumFit*3;
+    // 2) 三区均衡：中区(12-22)微加权，过低区(1-7)与过高区(28-33)微降权，防六数全挤一区
+    if(n>=1&&n<=7) w*=0.88;
+    else if(n>=12&&n<=22) w*=1.04;
+    else if(n>=28&&n<=33) w*=0.9;
+    // 3) 跨多宫推到的号码更可信
+    w+=(numFreq[n]-1)*2;
+    return {num:n,weight:w};
+  });
+
+  weighted.sort((a,b)=>b.weight-a.weight);
+  // 取前16个，再升序（展示友好）
+  return weighted.slice(0,16).map(x=>x.num).sort((a,b)=>a-b);
+}
+
+// ========== 红球号码收集（原逻辑完整保留：星宫关系、价值递推全部不变）==========
+function collectNumbers(palaceData,useXianTian,kongGongList,cfg,baseWx){
 const frontMax=cfg.frontMax,backMax=cfg.backMax;
-let frontScoreMap={},backScoreMap={};
+let frontNums=new Set();
+let selectedPalaces=Object.entries(palaceData)
+  .sort((a,b)=>Math.abs(b[1].score)-Math.abs(a[1].score))
+  .slice(0,7)
+  .map(([g])=>Number(g));
 
 const kongSet=new Set(kongGongList);
 // 对冲宫强制纳入
@@ -331,20 +391,11 @@ for(let g=1;g<=9;g++){
             const dp=palaceData[dc];
             const baseNums=[...dp.houTian];
             if(useXianTian)baseNums.push(...dp.tianXian);
-            
+
             baseNums.forEach(n=>{
-                // 前区
                 [n,n+10,n+20,n+30].forEach(num=>{
                     if(num>=1 && num<=frontMax){
-                        if(!frontScoreMap[num])frontScoreMap[num]=0;
-                        frontScoreMap[num]+=Math.abs(dp.score)+10;
-                    }
-                });
-                // 后区
-                [n,n+10,n+20,n+30].forEach(num=>{
-                    if(num>=1 && num<=backMax){
-                        if(!backScoreMap[num])backScoreMap[num]=0;
-                        backScoreMap[num]+=Math.abs(dp.score)+10;
+                        frontNums.add(num);
                     }
                 });
             });
@@ -352,37 +403,106 @@ for(let g=1;g<=9;g++){
     }
 }
 
-// 所有宫
+// 所有宫：原递推规则不变
 for(let g=1;g<=9;g++){
     const p=palaceData[g];
-    const sc=p.score;
     const baseNums=[...p.houTian];
     if(useXianTian)baseNums.push(...p.tianXian);
-    
+
     baseNums.forEach(n=>{
-        // 前区
         [n,n+10,n+20,n+30].forEach(num=>{
             if(num>=1 && num<=frontMax){
-                if(!frontScoreMap[num])frontScoreMap[num]=0;
-                frontScoreMap[num]+=sc;
-            }
-        });
-        // 后区
-        [n,n+10,n+20,n+30].forEach(num=>{
-            if(num>=1 && num<=backMax){
-                if(!backScoreMap[num])backScoreMap[num]=0;
-                backScoreMap[num]+=sc;
+                frontNums.add(num);
             }
         });
     });
 }
 
-let fSorted=Object.entries(frontScoreMap).sort((a,b)=>b[1]-a[1]);
-let frontPool=fSorted.slice(0,cfg.maxFront).map(e=>Number(e[0])).sort((a,b)=>a-b);
-let bSorted=Object.entries(backScoreMap).sort((a,b)=>b[1]-a[1]);
-let backPool=bSorted.slice(0,cfg.maxBack).map(e=>Number(e[0])).sort((a,b)=>a-b);
+// ===== 前区：生成规则不变，生成后按号码自身条件优选至16个 =====
+const front=refineFrontPool(Array.from(frontNums),palaceData,selectedPalaces,baseWx);
 
-return{front:frontPool,back:backPool};
+// ===== 蓝球：改用五行生克打分筛选（保留对象结构，供渲染读取num/wx/score）=====
+const blueScored=scoreBlueBalls(selectedPalaces,palaceData,baseWx);
+const back=blueScored.slice(0,cfg.maxBack);
+
+return{front,back};
+}
+
+// ========== 从指定宫位取数（红球取数规则不变，蓝球走生克）==========
+function collectNumbersFromPalaces(palaceData,selectedPalaces,useXianTian,cfg,baseWx){
+const frontMax=cfg.frontMax,backMax=cfg.backMax;
+let frontNums=new Set();
+
+// 红球：原逻辑保留（每个宫的本宫数 +10/+20/+30 递推）
+for(const g of selectedPalaces){
+    const p=palaceData[g];
+    if(!p) continue;
+    const baseNums=[...p.houTian];
+    if(useXianTian)baseNums.push(...p.tianXian);
+
+    baseNums.forEach(n=>{
+        [n,n+10,n+20,n+30].forEach(num=>{
+            if(num>=1 && num<=frontMax) frontNums.add(num);
+        });
+    });
+}
+
+// 前区：生成规则不变，生成后按号码自身条件优选至16个
+const front=refineFrontPool(Array.from(frontNums),palaceData,selectedPalaces,baseWx);
+
+// 蓝球：用生克打分
+const blueScored=scoreBlueBalls(selectedPalaces,palaceData,baseWx);
+const back=blueScored.slice(0,cfg.maxBack);
+
+return{front,back};
+}
+
+// ========== 蓝球五行生克打分 ==========
+function scoreBlueBalls(topPalaces,palaceData,baseWx){
+  const cfg=GAME_CFG[currentGame];
+  const backMax=cfg.backMax;
+  const scored=[];
+
+  // baseWx 缺失时退回"土"，避免整个函数抛错（防御）
+  const rel=wuxingMap[baseWx]||wuxingMap["土"];
+
+  // 推荐宫的宫五行 & 九星五行
+  const palaceWxSet=[], starWxSet=[];
+  topPalaces.forEach(g=>{
+    const p=palaceData[g];
+    if(p){ palaceWxSet.push(p.wuXing); starWxSet.push(p.xingWuxing); }
+  });
+
+  for(let n=1;n<=backMax;n++){
+    const bwx=BLUE_WX[n];
+    let s=0;
+
+    // 1) 与日干五行关系（核心）
+    if(bwx===rel.shengWo) s+=6;      // 生我（印）最高
+    else if(bwx===rel.tong) s+=4;    // 比和
+    else if(bwx===rel.woSheng) s+=2; // 我生
+    else if(bwx===rel.woKe) s+=1;    // 我克（可控）
+    else s-=3;                       // 克我（忌）
+
+    // 2) 与推荐宫宫五行关系
+    palaceWxSet.forEach(pwx=>{
+      if(wuxingSheng[pwx]===bwx) s+=2;  // 宫生蓝球
+      if(wuxingSheng[bwx]===pwx) s+=1;  // 蓝球生宫
+      if(pwx===bwx) s+=1;               // 比和
+      if(wuxingKe[pwx]===bwx) s-=1;     // 宫克蓝球
+    });
+
+    // 3) 与九星五行关系
+    starWxSet.forEach(swx=>{
+      if(wuxingSheng[swx]===bwx) s+=1;
+      if(swx===bwx) s+=0.5;
+    });
+
+    scored.push({num:n,wx:bwx,score:s});
+  }
+
+  scored.sort((a,b)=>b.score-a.score);
+  return scored;
 }
 
 // ========== 九宫按绝对值排序显示 ==========
@@ -447,13 +567,14 @@ html+=`<strong>推荐关注：</strong>${[...hotNums,...coldNums].slice(0,4).joi
 blueDiv.innerHTML=html;
 }
 
-// ========== 推荐5注号码 ==========
-function generateRecommendations(palaceData,topPalaces,cfg,ssqData){
+// ========== 推荐5注号码（确定性算法：和值/旋转矩阵/三区/奇偶/重号邻号）==========
+function generateRecommendations(palaceData,topPalaces,cfg,ssqData,dateSeed,baseWx){
 const recDiv=document.getElementById("recommendations");
 const useXT=document.getElementById("useXianTian").checked;
 
-const pools=collectNumbersFromPalaces(palaceData,topPalaces,useXT,cfg);
+const pools=collectNumbersFromPalaces(palaceData,topPalaces,useXT,cfg,baseWx||palaceData[topPalaces[0]]&&palaceData[topPalaces[0]].wuXing);
 const pool=pools.front;
+const backCandidates=pools.back; // 生克排序后的蓝球候选（对象数组）
 
 if(pool.length<6){
     recDiv.innerHTML=`<div style="color:#f87171;">号码池不足6个（仅${pool.length}个）：${pool.join(",")}，无法生成推荐。</div>`;
@@ -467,94 +588,86 @@ const avgSpan=Math.round(recent.map(d=>Math.max(...d.nums)-Math.min(...d.nums)).
 const poolMaxSum=pool.slice(-6).reduce((a,b)=>a+b,0);
 const adaptiveTarget=Math.round((avgSum+Math.min(avgSum,poolMaxSum))/2);
 
-// 辅助函数
+const rand=seededRandom(dateSeed||"default");
+
 function calcSum(arr){return arr.reduce((a,b)=>a+b,0);}
 function calcSpan(arr){return Math.max(...arr)-Math.min(...arr);}
 function countOdd(arr){return arr.filter(n=>n%2===1).length;}
 function zoneCount(arr,z){const ranges=[[1,11],[12,22],[23,33]];const[r0,r1]=ranges[z];return arr.filter(n=>n>=r0&&n<=r1).length;}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-// 策略1：和值优化 - 从池中选6个使和值接近历史平均
+// 策略1：和值优化
 function pickBySum(pool,target,n){
     let best=null,bestDiff=9999;
     for(let attempt=0;attempt<8000;attempt++){
-        const sample=[...pool].sort(()=>Math.random()-0.5).slice(0,n);
+        const sample=shuffle(pool).slice(0,n);
         const diff=Math.abs(calcSum(sample)-target);
         if(diff<bestDiff){bestDiff=diff;best=[...sample];if(diff<=5)break;}
     }
     return best.sort((a,b)=>a-b);
 }
 
-// 策略2：旋转矩阵 - 从池中取10-12个数
+// 策略2：旋转矩阵（按间隔步进取数，避免池短时分连续前n个）
 function wheelingPick(pool,n){
-    const size=Math.min(pool.length,12);
-    const base=[...pool].sort(()=>Math.random()-0.5).slice(0,size);
+    if(pool.length<=n) return pool.slice(0,n).sort((a,b)=>a-b);
+    const size=Math.min(pool.length,Math.max(n*2,10));
+    const step=Math.max(1,Math.floor(pool.length/(n+2)));
+    const base=[];
+    for(let i=0;i<pool.length&&base.length<size;i+=step){base.push(pool[i]);}
     const sets=[];
-    for(let i=0;i<8&&i<base.length;i++){
+    for(let i=0;i<Math.min(8,base.length);i++){
         const s=[...base];
         s.splice(i,1);
         if(s.length>=n) sets.push(s.slice(0,n).sort((a,b)=>a-b));
     }
-    return sets.sort((a,b)=>Math.abs(calcSum(a)-adaptiveTarget)-Math.abs(calcSum(b)-adaptiveTarget))[0]||base.slice(0,n).sort((a,b)=>a-b);
+    if(sets.length===0) return base.slice(0,n).sort((a,b)=>a-b);
+    sets.sort((a,b)=>Math.abs(calcSum(a)-adaptiveTarget)-Math.abs(calcSum(b)-adaptiveTarget));
+    return sets[0];
 }
 
-// 策略3：区间均衡 - 三区各选2个
+// 策略3：三区均衡（1-11/12-22/23-33 各2个）
 function pickByZone(pool){
     const z1=pool.filter(n=>n>=1&&n<=11);
     const z2=pool.filter(n=>n>=12&&n<=22);
     const z3=pool.filter(n=>n>=23&&n<=33);
     const r=[];
-    [z1,z2,z3].forEach(z=>{
-        const shuffled=[...z].sort(()=>Math.random()-0.5);
-        r.push(...shuffled.slice(0,2));
-    });
-    // 不够6个从剩余补
+    [z1,z2,z3].forEach(z=>{ r.push(...shuffle(z).slice(0,2)); });
     while(r.length<6){
         const remaining=pool.filter(n=>!r.includes(n));
         if(remaining.length===0)break;
-        r.push(remaining[Math.floor(Math.random()*remaining.length)]);
+        r.push(remaining[Math.floor(rand()*remaining.length)]);
     }
     return r.slice(0,6).sort((a,b)=>a-b);
 }
 
-// 策略4：奇偶平衡+跨度控制
+// 策略4：奇偶平衡
 function pickByOddEven(pool){
     const odds=pool.filter(n=>n%2===1);
     const evens=pool.filter(n=>n%2===0);
     const r=[];
-    // 3奇3偶或4奇2偶
-    const oddTarget=Math.random()>0.5?3:4;
+    const oddTarget=rand()>0.5?3:4;
     const evenTarget=6-oddTarget;
-    const sOdds=[...odds].sort(()=>Math.random()-0.5).slice(0,oddTarget);
-    const sEvens=[...evens].sort(()=>Math.random()-0.5).slice(0,evenTarget);
-    r.push(...sOdds,...sEvens);
+    r.push(...shuffle(odds).slice(0,oddTarget));
+    r.push(...shuffle(evens).slice(0,evenTarget));
     while(r.length<6){
         const remaining=pool.filter(n=>!r.includes(n));
         if(remaining.length===0)break;
-        r.push(remaining[Math.floor(Math.random()*remaining.length)]);
+        r.push(remaining[Math.floor(rand()*remaining.length)]);
     }
     return r.slice(0,6).sort((a,b)=>a-b);
 }
 
-// 策略5：重号+邻号策略 - 结合上期开奖号
+// 策略5：重号邻号（结合上期开奖号）
 function pickByRepeat(pool,prevNums){
     const r=[];
-    // 重号：从上期号码与池的交集中选1-2个
     const repeats=pool.filter(n=>prevNums.includes(n));
-    if(repeats.length>0){
-        const shuffled=[...repeats].sort(()=>Math.random()-0.5);
-        r.push(...shuffled.slice(0,Math.min(2,repeats.length)));
-    }
-    // 邻号：上期号码±1且在池中的
+    if(repeats.length>0) r.push(...shuffle(repeats).slice(0,Math.min(2,repeats.length)));
     const neighbors=pool.filter(n=>prevNums.some(p=>Math.abs(n-p)===1)&&!r.includes(n));
-    if(neighbors.length>0){
-        const shuffled=[...neighbors].sort(()=>Math.random()-0.5);
-        r.push(...shuffled.slice(0,Math.min(2,neighbors.length)));
-    }
-    // 剩余从池中随机补
+    if(neighbors.length>0) r.push(...shuffle(neighbors).slice(0,Math.min(2,neighbors.length)));
     while(r.length<6){
         const remaining=pool.filter(n=>!r.includes(n));
         if(remaining.length===0)break;
-        r.push(remaining[Math.floor(Math.random()*remaining.length)]);
+        r.push(remaining[Math.floor(rand()*remaining.length)]);
     }
     return r.slice(0,6).sort((a,b)=>a-b);
 }
@@ -570,15 +683,23 @@ const set5=pickByRepeat(pool,prevNums);
 const sets=[set1,set2,set3,set4,set5];
 const strategies=[
     `和值优化(目标${adaptiveTarget})`,
-    `旋转矩阵(${Math.min(pool.length,12)}选6)`,
+    `旋转矩阵(步进间隔取数)`,
     `三区均衡(2+2+2)`,
     `奇偶平衡(${countOdd(set4)}奇${6-countOdd(set4)}偶)`,
     `重号邻号(上期${prevNums.join(",")})`
 ];
 
-let html=`<strong>基于宫位[${topPalaces.join(",")}]的号码池(${pool.length}个)：</strong><br>`;
+// 蓝球按生克候选确定性地取5个（不全相同）
+const bluePick=[];
+for(let i=0;i<5;i++){
+  if(backCandidates.length>i) bluePick.push(backCandidates[i].num);
+  else if(backCandidates.length>0) bluePick.push(backCandidates[i%backCandidates.length].num);
+}
+
+let html=`<strong>基于宫位[${topPalaces.join(",")}]的红球池(${pool.length}个)：</strong><br>`;
 html+=`<div style="background:#1a1040;padding:8px;border-radius:6px;margin:6px 0;font-size:13px;">${pool.join(", ")}</div>`;
 html+=`<div style="font-size:12px;color:#aaa;margin:4px 0;">历史30期平均和值：${avgSum} | 池最大和值：${poolMaxSum} | 自适应目标：${adaptiveTarget} | 平均跨度：${avgSpan}</div>`;
+html+=`<div style="font-size:12px;color:#a78bfa;margin:4px 0;">蓝球候选（生克排序）：${backCandidates.slice(0,6).map(x=>x.num+"("+x.wx+":"+x.score.toFixed(1)+")").join("、")}</div>`;
 html+=`<strong>推荐5注：</strong><br>`;
 sets.forEach((set,i)=>{
     const sum=calcSum(set);
@@ -589,7 +710,7 @@ sets.forEach((set,i)=>{
         <strong>第${i+1}注（${strategies[i]}）：</strong><br>
         前区：${set.map(n=>String(n).padStart(2,"0")).join(" ")}<br>
         <span style="font-size:11px;color:#aaa;">和值:${sum} | 跨度:${span} | 奇偶:${odd}:${6-odd} | 区间:${zones}</span><br>
-        后区：${pools.back.slice(0,cfg.backPick).map(n=>String(n).padStart(2,"0")).join(" ")}
+        后区：${String(bluePick[i]).padStart(2,"0")}
     </div>`;
 });
 
@@ -953,15 +1074,13 @@ for(let i=0;i<ssqData.length;i++){
     const rec=ssqData[i];
     const pan=qiMenZhuanPan(rec.date,rec.shi);
     calcShengZiScore(pan.palaceData,pan.gz,pan.hourGan,pan.zhiFuGong);
-    
-    // 按绝对值排序选前3宫（回测用）
-    const sorted=Object.entries(pan.palaceData)
-        .map(([g,p])=>({palace:parseInt(g),score:p.score}))
-        .sort((a,b)=>Math.abs(b.score)-Math.abs(a.score));
-    const top3=sorted.slice(0,3).map(p=>p.palace);
-    
-    // 从top3宫取数
-    const pools=collectNumbersFromPalaces(pan.palaceData,top3,useXT,cfg);
+
+    const topPalaces=Object.entries(pan.palaceData)
+        .sort((a,b)=>Math.abs(b[1].score)-Math.abs(a[1].score))
+        .slice(0,7)
+        .map(([g])=>Number(g));
+
+    const pools=collectNumbers(pan.palaceData,useXT,pan.kongGongList,cfg,pan.baseWx);
     const frontSet=new Set(pools.front);
     let hits=0;
     const hitNums=[];
@@ -970,7 +1089,7 @@ for(let i=0;i<ssqData.length;i++){
     results.push({
         idx:i+1,
         date:rec.date,
-        top3:top3,
+        topPalaces:topPalaces,
         frontPool:pools.front,
         backPool:pools.back,
         frontSize:pools.front.length,
@@ -1000,13 +1119,13 @@ const randCov=(16/33*100).toFixed(1);
 const excessHit=(avgHit-randExp).toFixed(2);
 const excessCov=(avgCov-randCov).toFixed(1);
 
-let html=`<strong>===== ${ssqData.length}期回测结果（修正版）=====</strong><br><br>
+let html=`<strong>===== ${ssqData.length}期回测结果（前区优选至16个版）=====</strong><br><br>
 <strong>平均命中：</strong>${avgHit} / 6<br>
 <strong>平均覆盖率：</strong>${avgCov}%<br>
-<strong>平均前区池大小：</strong>${avgPool} 个<br><br>
+<strong>平均前区池大小：</strong>${avgPool} 个（优选后固定≤16）<br><br>
 <strong>命中分布：</strong><br>
 中0：${hitDist[0]}期 | 中1：${hitDist[1]}期 | 中2：${hitDist[2]}期 | 中3：${hitDist[3]}期 | 中4：${hitDist[4]}期 | 中5：${hitDist[5]}期 | 中6：${hitDist[6]}期<br><br>
-<strong>随机基准对比（16号池）：</strong><br>
+<strong>随机基准对比：</strong><br>
 随机期望命中：${randExp} | 随机期望覆盖率：${randCov}%<br>
 超额命中：${excessHit} | 超额覆盖率：${excessCov}%`;
 resultDom.innerHTML=html;
@@ -1015,34 +1134,11 @@ if(lastPan){
     renderJiuGong(lastPan.palaceData,lastPan);
     analyzeBlueBall(ssqData);
     const topPalaces=renderScoreRanking(lastPan.palaceData);
-    generateRecommendations(lastPan.palaceData,topPalaces,cfg,ssqData);
+    generateRecommendations(lastPan.palaceData,topPalaces,cfg,ssqData,ssqData[ssqData.length-1].date,lastPan.baseWx);
     const lastPool=results[results.length-1];
-    document.getElementById("poolInfo").innerHTML=`<strong>第${lastPool.idx}期 (${lastPool.date})</strong><br>回测选宫（前3）：${lastPool.top3.join("、")}宫<br>推荐选宫（前7）：${topPalaces.join("、")}宫<br>前区池(${lastPool.frontSize}个)：${lastPool.frontPool.join(", ")}<br>后区池(${lastPool.backSize}个)：${lastPool.backPool.join(", ")}<br>开奖号：${lastPool.actual.join(" ")}+${lastPool.blue}<br>前区命中：<span class="hit">${lastPool.hits}个</span> [${lastPool.hitNums.join(",")||"无"}] 遗漏：<span class="miss">[${lastPool.missNums.join(",")||"无"}]</span>`;
+    document.getElementById("poolInfo").innerHTML=`<strong>第${lastPool.idx}期 (${lastPool.date})</strong><br>推荐选宫（前7）：${lastPool.topPalaces.join("、")}宫<br>前区池(${lastPool.frontSize}个)：${lastPool.frontPool.join(", ")}<br>蓝球候选(${lastPool.backSize}个)：${lastPool.backPool.slice(0,6).map(x=>x.num+"("+x.wx+")").join(",")}<br>开奖号：${lastPool.actual.join(" ")}+${lastPool.blue}<br>前区命中：<span class="hit">${lastPool.hits}个</span> [${lastPool.hitNums.join(",")||"无"}] 遗漏：<span class="miss">[${lastPool.missNums.join(",")||"无"}]</span>`;
 }
 },100);
-}
-
-// ========== 从指定宫位取数 ==========
-function collectNumbersFromPalaces(palaceData,selectedPalaces,useXianTian,cfg){
-const frontMax=cfg.frontMax,backMax=cfg.backMax;
-let frontNums=new Set(),backNums=new Set();
-
-for(const g of selectedPalaces){
-    const p=palaceData[g];
-    const baseNums=[...p.houTian];
-    if(useXianTian)baseNums.push(...p.tianXian);
-    
-    baseNums.forEach(n=>{
-        [n,n+10,n+20,n+30].forEach(num=>{
-            if(num>=1 && num<=frontMax) frontNums.add(num);
-            if(num>=1 && num<=backMax) backNums.add(num);
-        });
-    });
-}
-
-const front=Array.from(frontNums).sort((a,b)=>a-b);
-const back=Array.from(backNums).sort((a,b)=>a-b);
-return{front,back};
 }
 
 // ========== 单期推演 ==========
@@ -1069,15 +1165,15 @@ const topPalaces=renderScoreRanking(pan.palaceData);
 // 篮球分析
 analyzeBlueBall(ssqData);
 
-// 推荐5注（用前5宫）
-generateRecommendations(pan.palaceData,topPalaces,cfg,ssqData);
+// 推荐5注（用前7宫 + 日期种子 + 日干五行）
+generateRecommendations(pan.palaceData,topPalaces,cfg,ssqData,dateStr,pan.baseWx);
 
 // 从前7宫取数
-const pools=collectNumbersFromPalaces(pan.palaceData,topPalaces,useXT,cfg);
+const pools=collectNumbers(pan.palaceData,useXT,pan.kongGongList,cfg,pan.baseWx);
 
 let poolHtml=`<strong>推荐宫位：</strong>${topPalaces.join("、")}宫<br>`;
-poolHtml+=`<strong>前区池(${pools.front.length}个)：</strong>${pools.front.join(", ")}<br>`;
-poolHtml+=`<strong>后区池(${pools.back.length}个)：</strong>${pools.back.join(", ")}`;
+poolHtml+=`<strong>前区池(${pools.front.length}个)：</strong>${pools.front.join(", ")}（优选后≤16）<br>`;
+poolHtml+=`<strong>蓝球候选(${pools.back.length}个)：</strong>${pools.back.slice(0,6).map(x=>x.num+"("+x.wx+":"+x.score.toFixed(1)+")").join(",")}`;
 document.getElementById("poolInfo").innerHTML=poolHtml;
 
 const sr=document.getElementById("singleResult");
@@ -1134,7 +1230,7 @@ const sorted=Object.entries(pan.palaceData)
 
 // 前7宫取数
 const top7=sorted.slice(0,7).map(p=>p.palace);
-const pools=collectNumbersFromPalaces(pan.palaceData,top7,useXT,cfg);
+const pools=collectNumbers(pan.palaceData,useXT,pan.kongGongList,cfg,pan.baseWx);
 const poolSet=new Set(pools.front);
 
 // 对比
@@ -1176,7 +1272,7 @@ resultDiv.innerHTML=`
 <strong>===== ${dateStr} 对比分析 =====</strong><br><br>
 <strong>开奖号：</strong>${rec.nums.map(n=>String(n).padStart(2,"0")).join(" ")} + ${rec.blue}<br>
 <strong>推荐宫位（前7）：</strong>${top7.join("、")}宫<br>
-<strong>号码池：</strong>${pools.front.length}个<br><br>
+<strong>号码池：</strong>${pools.front.length}个（优选后≤16）<br><br>
 <strong>命中：</strong><span class="hit">${hits.length}/6</span> [${hits.map(n=>String(n).padStart(2,"0")).join(" ")}]<br>
 <strong>遗漏：</strong><span class="miss">${misses.map(n=>String(n).padStart(2,"0")).join(" ")}</span><br>
 <strong>覆盖率：</strong>${(hits.length/6*100).toFixed(0)}%<br><br>
