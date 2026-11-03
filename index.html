@@ -91,6 +91,15 @@ button:hover{background:#1d4ed8;}
 </div>
 
 <div class="panel">
+<h2>历史对比分析</h2>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0;">
+<div><label>选择历史期日期：</label><input id="compareDate" type="date"></div>
+<div style="display:flex;align-items:end;"><button id="runCompareBtn" style="width:100%;background:#7c3aed;">开始对比</button></div>
+</div>
+<div id="compareResult" class="sr" style="display:none;"></div>
+</div>
+
+<div class="panel">
 <h2>100期自动回测</h2>
 <button id="runBatchBtn" style="width:100%;background:#16a34a;">重新运行100期回测</button>
 <div id="backTestResult"><div class="loading">回测运算中...</div></div>
@@ -392,10 +401,10 @@ sorted.forEach((p,i)=>{
     </div>`;
 });
 
-html+=`<br><strong>推荐选宫：</strong>${sorted.slice(0,3).map(p=>p.palace+"宫").join("、")}`;
+html+=`<br><strong>推荐选宫（前7宫）：</strong>${sorted.slice(0,7).map(p=>p.palace+"宫").join("、")}`;
 rankingDiv.innerHTML=html;
 
-return sorted.slice(0,3).map(p=>p.palace);
+return sorted.slice(0,7).map(p=>p.palace);
 }
 
 // ========== 篮球规律分析 ==========
@@ -439,19 +448,24 @@ blueDiv.innerHTML=html;
 }
 
 // ========== 推荐5注号码 ==========
-function generateRecommendations(palaceData,top3Palaces,cfg,ssqData){
+function generateRecommendations(palaceData,topPalaces,cfg,ssqData){
 const recDiv=document.getElementById("recommendations");
 const useXT=document.getElementById("useXianTian").checked;
 
-// 从top3宫取数
-const pools=collectNumbersFromPalaces(palaceData,top3Palaces,useXT,cfg);
+const pools=collectNumbersFromPalaces(palaceData,topPalaces,useXT,cfg);
 const pool=pools.front;
 
-// 分析历史数据
+if(pool.length<6){
+    recDiv.innerHTML=`<div style="color:#f87171;">号码池不足6个（仅${pool.length}个）：${pool.join(",")}，无法生成推荐。</div>`;
+    return;
+}
+
 const recent=ssqData.slice(0,30);
 const sums=recent.map(d=>d.nums.reduce((a,b)=>a+b,0));
 const avgSum=Math.round(sums.reduce((a,b)=>a+b,0)/sums.length);
 const avgSpan=Math.round(recent.map(d=>Math.max(...d.nums)-Math.min(...d.nums)).reduce((a,b)=>a+b,0)/recent.length);
+const poolMaxSum=pool.slice(-6).reduce((a,b)=>a+b,0);
+const adaptiveTarget=Math.round((avgSum+Math.min(avgSum,poolMaxSum))/2);
 
 // 辅助函数
 function calcSum(arr){return arr.reduce((a,b)=>a+b,0);}
@@ -462,27 +476,25 @@ function zoneCount(arr,z){const ranges=[[1,11],[12,22],[23,33]];const[r0,r1]=ran
 // 策略1：和值优化 - 从池中选6个使和值接近历史平均
 function pickBySum(pool,target,n){
     let best=null,bestDiff=9999;
-    for(let attempt=0;attempt<5000;attempt++){
+    for(let attempt=0;attempt<8000;attempt++){
         const sample=[...pool].sort(()=>Math.random()-0.5).slice(0,n);
         const diff=Math.abs(calcSum(sample)-target);
-        if(diff<bestDiff){bestDiff=diff;best=[...sample];if(diff<=3)break;}
+        if(diff<bestDiff){bestDiff=diff;best=[...sample];if(diff<=5)break;}
     }
     return best.sort((a,b)=>a-b);
 }
 
-// 策略2：旋转矩阵 - 从池中取8-10个数，用轮转保证覆盖
+// 策略2：旋转矩阵 - 从池中取10-12个数
 function wheelingPick(pool,n){
-    const size=Math.min(pool.length,10);
+    const size=Math.min(pool.length,12);
     const base=[...pool].sort(()=>Math.random()-0.5).slice(0,size);
-    // 简单(6,5)轮转：从base中选6个，保证若5个在开奖号中至少中5
     const sets=[];
-    for(let i=0;i<6&&i<base.length;i++){
+    for(let i=0;i<8&&i<base.length;i++){
         const s=[...base];
-        s.splice(i,1); // 每次去掉1个
+        s.splice(i,1);
         if(s.length>=n) sets.push(s.slice(0,n).sort((a,b)=>a-b));
     }
-    // 选和值最接近平均的
-    return sets.sort((a,b)=>Math.abs(calcSum(a)-avgSum)-Math.abs(calcSum(b)-avgSum))[0]||base.slice(0,n).sort((a,b)=>a-b);
+    return sets.sort((a,b)=>Math.abs(calcSum(a)-adaptiveTarget)-Math.abs(calcSum(b)-adaptiveTarget))[0]||base.slice(0,n).sort((a,b)=>a-b);
 }
 
 // 策略3：区间均衡 - 三区各选2个
@@ -549,7 +561,7 @@ function pickByRepeat(pool,prevNums){
 
 const prevNums=ssqData[0]?ssqData[0].nums:[];
 
-const set1=pickBySum(pool,avgSum,6);
+const set1=pickBySum(pool,adaptiveTarget,6);
 const set2=wheelingPick(pool,6);
 const set3=pickByZone(pool);
 const set4=pickByOddEven(pool);
@@ -557,16 +569,16 @@ const set5=pickByRepeat(pool,prevNums);
 
 const sets=[set1,set2,set3,set4,set5];
 const strategies=[
-    `和值优化(目标${avgSum})`,
-    `旋转矩阵(${Math.min(pool.length,10)}选6)`,
+    `和值优化(目标${adaptiveTarget})`,
+    `旋转矩阵(${Math.min(pool.length,12)}选6)`,
     `三区均衡(2+2+2)`,
     `奇偶平衡(${countOdd(set4)}奇${6-countOdd(set4)}偶)`,
     `重号邻号(上期${prevNums.join(",")})`
 ];
 
-let html=`<strong>基于宫位[${top3Palaces.join(",")}]的号码池(${pool.length}个)：</strong><br>`;
+let html=`<strong>基于宫位[${topPalaces.join(",")}]的号码池(${pool.length}个)：</strong><br>`;
 html+=`<div style="background:#1a1040;padding:8px;border-radius:6px;margin:6px 0;font-size:13px;">${pool.join(", ")}</div>`;
-html+=`<div style="font-size:12px;color:#aaa;margin:4px 0;">历史30期平均和值：${avgSum} | 平均跨度：${avgSpan}</div>`;
+html+=`<div style="font-size:12px;color:#aaa;margin:4px 0;">历史30期平均和值：${avgSum} | 池最大和值：${poolMaxSum} | 自适应目标：${adaptiveTarget} | 平均跨度：${avgSpan}</div>`;
 html+=`<strong>推荐5注：</strong><br>`;
 sets.forEach((set,i)=>{
     const sum=calcSum(set);
@@ -942,7 +954,7 @@ for(let i=0;i<ssqData.length;i++){
     const pan=qiMenZhuanPan(rec.date,rec.shi);
     calcShengZiScore(pan.palaceData,pan.gz,pan.hourGan,pan.zhiFuGong);
     
-    // 按绝对值排序选前3宫
+    // 按绝对值排序选前3宫（回测用）
     const sorted=Object.entries(pan.palaceData)
         .map(([g,p])=>({palace:parseInt(g),score:p.score}))
         .sort((a,b)=>Math.abs(b.score)-Math.abs(a.score));
@@ -1002,10 +1014,10 @@ resultDom.innerHTML=html;
 if(lastPan){
     renderJiuGong(lastPan.palaceData,lastPan);
     analyzeBlueBall(ssqData);
-    const top3=renderScoreRanking(lastPan.palaceData);
-    generateRecommendations(lastPan.palaceData,top3,cfg,ssqData);
+    const topPalaces=renderScoreRanking(lastPan.palaceData);
+    generateRecommendations(lastPan.palaceData,topPalaces,cfg,ssqData);
     const lastPool=results[results.length-1];
-    document.getElementById("poolInfo").innerHTML=`<strong>第${lastPool.idx}期 (${lastPool.date})</strong><br>推荐宫位：${lastPool.top3.join("、")}宫<br>前区池(${lastPool.frontSize}个)：${lastPool.frontPool.join(", ")}<br>后区池(${lastPool.backSize}个)：${lastPool.backPool.join(", ")}<br>开奖号：${lastPool.actual.join(" ")}+${lastPool.blue}<br>前区命中：<span class="hit">${lastPool.hits}个</span> [${lastPool.hitNums.join(",")||"无"}] 遗漏：<span class="miss">[${lastPool.missNums.join(",")||"无"}]</span>`;
+    document.getElementById("poolInfo").innerHTML=`<strong>第${lastPool.idx}期 (${lastPool.date})</strong><br>回测选宫（前3）：${lastPool.top3.join("、")}宫<br>推荐选宫（前7）：${topPalaces.join("、")}宫<br>前区池(${lastPool.frontSize}个)：${lastPool.frontPool.join(", ")}<br>后区池(${lastPool.backSize}个)：${lastPool.backPool.join(", ")}<br>开奖号：${lastPool.actual.join(" ")}+${lastPool.blue}<br>前区命中：<span class="hit">${lastPool.hits}个</span> [${lastPool.hitNums.join(",")||"无"}] 遗漏：<span class="miss">[${lastPool.missNums.join(",")||"无"}]</span>`;
 }
 },100);
 }
@@ -1051,19 +1063,19 @@ const pan=qiMenZhuanPan(dateStr,shiIdx);
 calcShengZiScore(pan.palaceData,pan.gz,pan.hourGan,pan.zhiFuGong);
 renderJiuGong(pan.palaceData,pan);
 
-// 排序显示
-const top3=renderScoreRanking(pan.palaceData);
+// 排序显示（返回前7宫用于推荐）
+const topPalaces=renderScoreRanking(pan.palaceData);
 
 // 篮球分析
 analyzeBlueBall(ssqData);
 
-// 推荐5注
-generateRecommendations(pan.palaceData,top3,cfg,ssqData);
+// 推荐5注（用前5宫）
+generateRecommendations(pan.palaceData,topPalaces,cfg,ssqData);
 
-// 从top3宫取数
-const pools=collectNumbersFromPalaces(pan.palaceData,top3,useXT,cfg);
+// 从前7宫取数
+const pools=collectNumbersFromPalaces(pan.palaceData,topPalaces,useXT,cfg);
 
-let poolHtml=`<strong>推荐宫位：</strong>${top3.join("、")}宫<br>`;
+let poolHtml=`<strong>推荐宫位：</strong>${topPalaces.join("、")}宫<br>`;
 poolHtml+=`<strong>前区池(${pools.front.length}个)：</strong>${pools.front.join(", ")}<br>`;
 poolHtml+=`<strong>后区池(${pools.back.length}个)：</strong>${pools.back.join(", ")}`;
 document.getElementById("poolInfo").innerHTML=poolHtml;
@@ -1098,9 +1110,87 @@ if(finalAwardStr){
 sr.innerHTML=scoreHtml+reviewHtml;
 }
 
+// ========== 历史对比分析 ==========
+function runCompare(){
+const dateStr=document.getElementById("compareDate").value;
+if(!dateStr){alert("请选择日期");return;}
+
+const rec=ssqData.find(d=>d.date===dateStr);
+if(!rec){
+    document.getElementById("compareResult").style.display="block";
+    document.getElementById("compareResult").innerHTML=`<span class="miss">未找到 ${dateStr} 的开奖数据</span>`;
+    return;
+}
+
+const cfg=GAME_CFG[currentGame];
+const useXT=document.getElementById("useXianTian").checked;
+const pan=qiMenZhuanPan(dateStr,rec.shi||11);
+calcShengZiScore(pan.palaceData,pan.gz,pan.hourGan,pan.zhiFuGong);
+
+// 按绝对值排序
+const sorted=Object.entries(pan.palaceData)
+    .map(([g,p])=>({palace:parseInt(g),...p}))
+    .sort((a,b)=>Math.abs(b.score)-Math.abs(a.score));
+
+// 前7宫取数
+const top7=sorted.slice(0,7).map(p=>p.palace);
+const pools=collectNumbersFromPalaces(pan.palaceData,top7,useXT,cfg);
+const poolSet=new Set(pools.front);
+
+// 对比
+const hits=rec.nums.filter(n=>poolSet.has(n));
+const misses=rec.nums.filter(n=>!poolSet.has(n));
+
+// 各宫得分明细
+let scoreDetail="";
+sorted.forEach((p,i)=>{
+    const inTop7=i<7;
+    const tags=[];
+    if(p.isFuYin)tags.push("伏吟");if(p.isWangXiang)tags.push("旺相");
+    if(p.isKong)tags.push("空亡");if(p.isChong)tags.push("冲");
+    scoreDetail+=`<tr style="${inTop7?'background:#1e40af33':''}">
+        <td>${i+1}</td><td>${p.palace}宫</td><td>${p.xingFull}</td>
+        <td>${p.score}</td><td>${Math.abs(p.score)}</td>
+        <td>${tags.join(",")||"-"}</td>
+        <td>${inTop7?'✓':'-'}</td>
+    </tr>`;
+});
+
+// 号码池与开奖号对比
+let poolCompare="";
+const allNums=Array.from({length:cfg.frontMax},(_,i)=>i+1);
+allNums.forEach(n=>{
+    const inPool=poolSet.has(n);
+    const isHit=rec.nums.includes(n);
+    let cls="";
+    if(inPool&&isHit)cls="hit";
+    else if(!inPool&&isHit)cls="miss";
+    if(inPool||isHit){
+        poolCompare+=`<span class="${cls}" style="display:inline-block;padding:2px 6px;margin:2px;border-radius:4px;background:${inPool?(isHit?'#14532d':'#1e293b'):(isHit?'#7f1d1d':'transparent')};">${String(n).padStart(2,"0")}${isHit?'★':''}</span>`;
+    }
+});
+
+const resultDiv=document.getElementById("compareResult");
+resultDiv.style.display="block";
+resultDiv.innerHTML=`
+<strong>===== ${dateStr} 对比分析 =====</strong><br><br>
+<strong>开奖号：</strong>${rec.nums.map(n=>String(n).padStart(2,"0")).join(" ")} + ${rec.blue}<br>
+<strong>推荐宫位（前7）：</strong>${top7.join("、")}宫<br>
+<strong>号码池：</strong>${pools.front.length}个<br><br>
+<strong>命中：</strong><span class="hit">${hits.length}/6</span> [${hits.map(n=>String(n).padStart(2,"0")).join(" ")}]<br>
+<strong>遗漏：</strong><span class="miss">${misses.map(n=>String(n).padStart(2,"0")).join(" ")}</span><br>
+<strong>覆盖率：</strong>${(hits.length/6*100).toFixed(0)}%<br><br>
+<strong>号码池与开奖号对比</strong>（★=开奖号，绿=命中，红=遗漏）：<br>
+<div style="margin:6px 0;line-height:2;">${poolCompare}</div><br>
+<strong>九宫评分排序：</strong>
+<table><tr><th>排名</th><th>宫位</th><th>星</th><th>得分</th><th>绝对值</th><th>标签</th><th>入选</th></tr>
+${scoreDetail}</table>`;
+}
+
 // ========== 事件绑定 ==========
 document.getElementById("runSingleBtn").onclick=runSingle;
 document.getElementById("runBatchBtn").onclick=runBacktest;
+document.getElementById("runCompareBtn").onclick=runCompare;
 
 document.querySelectorAll(".game-tab").forEach(tab=>{
     tab.onclick=function(){
