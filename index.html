@@ -168,6 +168,18 @@ th{color:#ffd343;background:#1a2333;}
 </div>
 
 <div class="section">
+   <div class="section">
+<h2>七‑ATM扩展回测板【新增｜不改动原有逻辑】</h2>
+<div class="tip warnText">⚠️本模块仅输出统计CSV，不修改原有排盘、取池、组注逻辑，原有功能完全不变</div>
+<textarea id="histData_ATM" style="width:100%;height:90px;background:#0b101c;color:#cbd5e1;border:1px solid #334155;padding:6px;font-size:13px;font-family:Consolas,monospace;" placeholder="格式同原版：每行一期：日期,时辰序号,号码...&#10;大乐透：2026‑11‑04,11,03,08,15,22,29,05,11&#10;双色球：2026‑11‑04,11,03,08,15,22,29,33,07"></textarea>
+<div class="flex">
+<button class="success" onclick="runBatch_ATM()">ATM批量增强回测</button>
+<button class="secondary" onclick="exportCsv_ATM()">导出ATM增强CSV</button>
+<button class="warn" onclick="clearAll_ATM()">清空ATM</button>
+</div>
+<div class="logArea" id="btBox_ATM" style="margin‑top:6px;">ATM扩展回测等待运行...</div>
+</div>
+
 <h2>八、运行日志</h2>
 <div class="fullLog" id="fullLog"></div>
 </div>
@@ -1000,6 +1012,202 @@ function clearAll(){
   el("panInfo").innerHTML="等待排盘...";
   clearLog();
 }
+/* =========================================================
+   ATM扩展回测板 —— 纯新增，原有逻辑完全不动
+   用途：拆解每一个开奖号码对应的盘面元数据用于统计；不改变buildPool、排盘、选号逻辑
+ ========================================================= */
+let atmResultStore = null;
+
+// 根据号码得到对应的后天宫（宫数+10循环）
+function numToHouTianGongId(n){
+    const gongMap = {1:1,2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9};
+    let base = ((n-1)%9)+1;
+    return gongMap[base];
+}
+// 获取宫先天数
+function getGongXianTian(gongId){
+    const info = GONG_BY_ID[gongId];
+    return info ? info.xianTian : null;
+}
+// 获取对冲宫id
+function getChongGongId(gongId){
+    const info = GONG_BY_ID[gongId];
+    return info ? info.chong : null;
+}
+// 判断地支是否属于旬空
+function isZhiInKong(zhiName,kongArr){
+    return kongArr.indexOf(zhiName)>=0;
+}
+// 根据宫id得到该宫地盘地支（用于旬空判断）
+function gongToDiZhiList(gongId){
+    const map = {
+        1:["子"],
+        2:["未","申"],
+        3:["寅"],
+        4:["辰","巳"],
+        5:[],
+        6:["戌","亥"],
+        7:["酉"],
+        8:["丑"],
+        9:["午"]
+    };
+    return map[gongId]||[];
+}
+// ATM解析历史文本，和原版parseHist逻辑一致
+function parseHist_ATM(){
+    const raw=el("histData_ATM").value.trim();
+    if(!raw)return null;
+    const rows=[];
+    raw.split("\n").forEach(line=>{
+        const t=line.split(/[,\s\t]+/).filter(x=>x);
+        if(t.length<2) return;
+        const dateStr = t[0];
+        const shiIdx = parseInt(t[1],10)||0;
+        const nums = t.slice(2).map(x=>+x).filter(x=>x>0);
+        if(nums.length>=5){
+            rows.push({date:dateStr,shiIdx:shiIdx,nums:nums});
+        }
+    });
+    return rows;
+}
+
+// ATM增强回测主入口
+function runBatch_ATM(){
+    const rows = parseHist_ATM();
+    if(!rows){
+        el("btBox_ATM").innerHTML='<span class="warnText">请在ATM输入框粘贴历史开奖数据</span>';
+        atmResultStore=null;
+        return;
+    }
+    const cfg = getLotCfg();
+    const outRecords=[];
+
+    for(const r of rows){
+        const p = r.date.split("-").map(Number);
+        const jd = toJulianDay(p[0],p[1],p[2], parseInt(r.shiIdx,10)*2+1);
+        const dayGZ = getDayGanZhi(p[0],p[1],p[2]);
+        const shiGan = getHourGanZhi(dayGZ.gan, r.shiIdx).gan;
+        // 完全复用原有buildPan，不改动排盘
+        const pan = buildPan(jd, dayGZ, r.shiIdx);
+        const tmpCfg = Object.assign({},cfg,{shiIdx:r.shiIdx,shiGan:shiGan});
+        // 完全复用原有buildPool，拿到原版号码池，不修改取池逻辑
+        const poolRes = buildPool(pan, tmpCfg);
+        const frontDraw = r.nums.slice(0,cfg.frontCount);
+
+        for(const num of frontDraw){
+            const gongId = numToHouTianGongId(num);
+            const gongInfo = GONG_BY_ID[gongId];
+            const scoredItem = GONG_INFO.map(g=>({g:g,score:scoreGong(g,pan)})).find(s=>s.g.id===gongId);
+            const score = scoredItem ? scoredItem.score : null;
+            const absScore = score!==null ? Math.abs(score):null;
+            const inOldPool = poolRes.picks.indexOf(num)>=0;
+
+            // 日干与宫五行关系
+            const riGanWx = GAN_WX[dayGZ.gan];
+            const relRi = gongRelation(riGanWx, gongInfo.wx);
+            // 时干与宫五行关系
+            const shiGanWx = GAN_WX[shiGan];
+            const relShi = gongRelation(shiGanWx, gongInfo.wx);
+
+            const isZhiFuGong = pan.zhifuGong === gongId;
+            const chongId = getChongGongId(gongId);
+            const isZhiFuChong = (chongId===pan.zhifuGong);
+
+            // 旬空判断：该宫地支是否落入本旬空亡
+            const gongZhiList = gongToDiZhiList(gongId);
+            let isXunKongGong = false;
+            for(const z of gongZhiList){
+                if(isZhiInKong(z, pan.xun.kong)){
+                    isXunKongGong=true;break;
+                }
+            }
+            // 对冲宫是否空亡
+            let chongIsXunKong = false;
+            if(chongId){
+                const chongZhi = gongToDiZhiList(chongId);
+                for(const z of chongZhi){
+                    if(isZhiInKong(z, pan.xun.kong)){chongIsXunKong=true;break;}
+                }
+            }
+            const xianTianNum = getGongXianTian(gongId);
+            const tianXing = pan.tianXing[gongId]||"-";
+            const baMen = pan.renMen[gongId]||"-";
+            const baShen = pan.shen[gongId]||"-";
+
+            outRecords.push({
+                date:r.date,
+                shiIdx:r.shiIdx,
+                drawNum:num,
+                gongId:gongId,
+                gongName:gongInfo.name,
+                gongWx:gongInfo.wx,
+                score:score,
+                absScore:absScore,
+                inOldPool:inOldPool?"1":"0",
+                relRiGan:relRi,
+                relShiGan:relShi,
+                isZhiFuGong:isZhiFuGong?"1":"0",
+                chongGongId:chongId,
+                isZhiFuChong:isZhiFuChong?"1":"0",
+                isXunKongGong:isXunKongGong?"1":"0",
+                chongIsXunKong:chongIsXunKong?"1":"0",
+                houTian:gongInfo.houTian,
+                xianTian:xianTianNum,
+                tianXing:tianXing,
+                baMen:baMen,
+                baShen:baShen,
+                xunKongText:pan.xun.kong.join("、")
+            });
+        }
+    }
+    atmResultStore = outRecords;
+    // 简单统计展示页面
+    let html=`<div>ATM回测完成，共解析${outRecords.length}个开奖前区号码</div>`;
+    html+=`<div class="tip">点击【导出ATM增强CSV】获取全部明细，用于Excel透视分析</div>`;
+    el("btBox_ATM").innerHTML = html;
+}
+
+// 导出ATM增强CSV
+function exportCsv_ATM(){
+    if(!atmResultStore||atmResultStore.length===0){
+        el("btBox_ATM").innerHTML='<span class="warnText">请先运行ATM批量增强回测</span>';
+        return;
+    }
+    const header = [
+        "日期","时辰序号","开奖号码","落宫ID","落宫名称","宫五行",
+        "原始星宫分数","分数绝对值","是否进入原版池(1是0否)",
+        "日干‑宫生克关系","时干‑宫生克关系",
+        "是否值符本宫(1是0否)","对冲宫ID","是否是值符对冲宫(1是0否)",
+        "本宫是否旬空(1是0否)","对冲宫是否旬空(1是0否)",
+        "后天数","先天数","天盘九星","人盘八门","八神","本旬旬空地支"
+    ];
+    let csv = "\ufeff"+header.join(",")+"\n";
+    for(const rec of atmResultStore){
+        const row = [
+            rec.date,rec.shiIdx,rec.drawNum,
+            rec.gongId,rec.gongName,rec.gongWx,
+            rec.score,rec.absScore,rec.inOldPool,
+            `"${rec.relRiGan}"`,`"${rec.relShiGan}"`,
+            rec.isZhiFuGong,rec.chongGongId,rec.isZhiFuChong,
+            rec.isXunKongGong,rec.chongIsXunKong,
+            rec.houTian,rec.xianTian,
+            `"${rec.tianXing}"`,`"${rec.baMen}"`,`"${rec.baShen}"`,`"${rec.xunKongText}"`
+        ];
+        csv += row.join(",")+"\n";
+    }
+    const blob=new Blob([csv],{type:"text/csv;charset=utf‑8"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="qimen_ATM增强回测.csv";
+    a.click();
+}
+
+function clearAll_ATM(){
+    el("histData_ATM").value="";
+    el("btBox_ATM").innerHTML="ATM扩展回测等待运行...";
+    atmResultStore=null;
+}
+/* ========== ATM扩展模块结束 ========== */
 
 /* =========================================================
    L. 初始化
