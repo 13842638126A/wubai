@@ -59,7 +59,7 @@ th{color:#ffd343;background:#1a2333;}
 </head>
 <body>
 <h1>奇门宫数合一取号 · 全真沙盘</h1>
-<div class="sub">真节气 / 真四柱 / 真排盘 / 真取数 · v4</div>
+<div class="sub">真节气 / 真四柱 / 真排盘 / 真取数 · v6</div>
 
 <div class="section">
 <h2>一、起盘参数</h2>
@@ -120,8 +120,8 @@ th{color:#ffd343;background:#1a2333;}
 <div class="flex">
 <label>池容量</label><input type="number" id="poolSize" value="16" min="8" max="28">
 <label>取宫下限(绝对值)</label><input type="number" id="minAbs" value="0" min="0" max="10">
-<label>大号起</label><input type="number" id="bigStart" value="21" min="10" max="30">
-<label>中号起</label><input type="number" id="midStart" value="11" min="5" max="20">
+<label>中号下界(≥)</label><input type="number" id="midStart" value="15" min="2" max="30">
+<label>大号下界(>)</label><input type="number" id="bigStart" value="25" min="3" max="35">
 </div>
 <div class="flex">
 <label>和值下限</label><input type="number" id="sumMin" value="70">
@@ -437,12 +437,6 @@ function buildPan(jd,dayGZ,shiIdx){
   const zhifuXing=GONG_BY_ID[zhifuGongReal].xing;
 
   // 值使门：旬首在地盘时支宫（十二辰），该宫地盘八门即值使
-  // 十二辰落宫：坎1,坤2(丑),震3,巽4(辰),中5(寄坤),乾6,兑7(未),艮8,离9
-  const chenGong=[1,2,3,4,2,6,7,8,9,10,11,12].map((v,i)=>v); // placeholder
-  const shiChenGongReal=zhiPos+1; // 子1,丑2,... 戌11->乾, 亥12->坎? 需映射
-  // 十二辰 → 九宫映射（十二长生宫位）
-  const ZHI_GONG={"子":1,"丑":2,"寅":3,"卯":4,"辰":5,"巳":6,"午":7,"未":8,"申":9,"酉":10,"戌":6,"亥":9};
-  // 简化：子午卯酉配四正，寅申巳亥配四隅，辰戌丑未配四隅
   const ZHI2GONG={"子":1,"丑":8,"寅":3,"卯":4,"辰":4,"巳":9,"午":9,"未":2,"申":7,"酉":7,"戌":6,"亥":6};
   let zhishiGong=ZHI2GONG[zhiShou];
   if(jiKun&&zhishiGong===5)zhishiGong=2;
@@ -460,18 +454,14 @@ function buildPan(jd,dayGZ,shiIdx){
   // 人盘八门：值使门落值使宫，阳顺阴逆布八门，九宫全布（中五寄坤时八门不入中宫）
   const renMenGong={};
   for(let k=0;k<9;k++){
-    const pos=dj.yang?((zhishiGong-1+k)%9):((zhishiGong-1-k+9)%9)
+    const pos=dj.yang?((zhishiGong-1+k)%9):((zhishiGong-1-k+9)%9);
     const gong=gongOrder[pos];
     renMenGong[gong]=BA_MEN[(BA_MEN.indexOf(zhishiMen)+k)%8];
   }
   if(jiKun&&renMenGong[5]!==undefined){renMenGong[5]=undefined;}
 
-  // 天盘三奇六仪：旬首（六仪）随时辰天干落宫
-  // 时干所在宫的天盘仪 = 时干
-  const shiGan=TIAN_GAN[getHourGanZhi(dayGZ.gan,shiIdx).gan===""?"":""];
-  // 时干对应六仪：戊己庚辛壬癸丁丙乙
+  // 天盘三奇六仪：值符宫起旬首仪，阳顺阴逆布仪
   const tianYiGong={};
-  // 天盘仪随天盘星走：值符宫起旬首仪，阳顺阴逆布仪
   for(let k=0;k<9;k++){
     const pos=dj.yang?((zhifuGongReal-1+k)%9):((zhifuGongReal-1-k+9)%9);
     const gong=gongOrder[pos];
@@ -534,9 +524,6 @@ function scoreGong(gong,pan){
   if(pan.zhishiGong===gong.id)s+=SCORE_RULES.zhiShiGong[0];
   const yi=pan.tianYi[gong.id];
   if(SAN_QI.indexOf(yi)>=0)s+=SCORE_RULES.sanQi[0];
-  // 旬空：宫支在旬空中
-  const gz=SIXTY_JIAZI[(pan.dayGZ.idx)%60];
-  if(pan.xun.kong.indexOf(gong.gua)<0&&pan.xun.kong.indexOf(gong.name.replace(/[宫]/,""))>=0){}
   return s;
 }
 
@@ -552,9 +539,6 @@ function getBaseWx(pan){
     case "zhishi":return MEN_WX[pan.zhishiMen]||"土";
     default:return GAN_WX[pan.dayGZ.gan];
   }
-}
-function getShiGan(pan){
-  return pan.dayGZ.gan; // 占位，时干在 runPan 中另行计算
 }
 /* 主体与宫的生克方向
    返回 sheng: 主体生宫；ke: 主体克宫；shengBy: 宫生主体；keBy: 宫克主体；bihe
@@ -586,19 +570,19 @@ function sizeFromRelation(rel,rule){
    G. 宫位取数：大中小号
    ========================================================= */
 /* 宫位基础数候选（后天数 +10k）
-   gongNum: 宫后天数(1-9)
-   bigStart: 大号起（如21，则该宫大号= gongNum+20 与 gongNum+30）
-   midStart: 中号起（如11）
-   返回 {big:[],mid:[],sml:[]}
+   断号规则（v6）：
+   < midStart(15) 为小号
+   >= midStart 且 <= bigStart(25) 为中号
+   > bigStart 为大号
 */
-function gongNumCandidates(gongNum,bigStart,midStart,maxNum){
+function gongNumCandidates(gongNum,midStart,bigStart,maxNum){
   const set={big:[],mid:[],sml:[]};
   for(let k=0;k<4;k++){
     const n=gongNum+k*10;
     if(n>maxNum)continue;
-    if(n>=bigStart)set.big.push(n);
-    else if(n>=midStart)set.mid.push(n);
-    else set.sml.push(n);
+    if(n<midStart)        set.sml.push(n);
+    else if(n<=bigStart)  set.mid.push(n);
+    else                  set.big.push(n);
   }
   return set;
 }
@@ -608,7 +592,8 @@ function gongNumCandidates(gongNum,bigStart,midStart,maxNum){
    3. 满 poolSize 停止
 */
 function buildPool(pan,lotCfg){
-  const bigStart=lotCfg.bigStart,midStart=lotCfg.midStart;
+  const midStart=lotCfg.midStart;
+  const bigStart=lotCfg.bigStart;
   const poolSize=lotCfg.poolSize;
   const minAbs=lotCfg.minAbs;
   const rule=document.getElementById("sizeRule").value;
@@ -635,50 +620,37 @@ function buildPool(pan,lotCfg){
   const trace=[];      // 每宫取号过程记录
   let i=0;
   while(picks.length<poolSize&&i<eligible.length){
-    const {g,score}=eligible[i]; i++;
+    const o=eligible[i];i++;
+    const g=o.g;
     const rel=gongRelation(baseWx,g.wx);
     const size=sizeFromRelation(rel,rule);
-    const cands=gongNumCandidates(g.houTian,bigStart,midStart,lotCfg.maxFront);
-    // 该宫按 size 取号：大号取全部大号候选；小号取全部小号候选；中号取全部中号候选
+    const cands=gongNumCandidates(g.houTian,midStart,bigStart,lotCfg.maxFront);
+    // 按 size 定优先段，取不到回退其他段
+    const order=(size==="大")?["big","mid","sml"]:(size==="小")?["sml","mid","big"]:["mid","sml","big"];
     let take=[];
-    if(size==="大")take=cands.big.slice();
-    else if(size==="小")take=cands.sml.slice();
-    else take=cands.mid.slice();
-    // 若按 size 取不到（如大号候选为空），回退取中号，再回退取小号
-    if(take.length===0)take=cands.mid.slice();
-    if(take.length===0)take=cands.sml.slice();
+    for(const key of order){
+      if(cands[key].length>0){take=cands[key].slice();break;}
+    }
     const added=[];
     for(const n of take){
       if(picks.length>=poolSize)break;
       if(picks.indexOf(n)<0){picks.push(n);added.push(n);}
     }
-    trace.push({gong:g,name:g.name,score:score,rel:rel,size:size,taken:added.slice()});
+    trace.push({gong:g,name:g.name,score:o.score,rel:rel,size:size,taken:added.slice()});
   }
-  // 若池未满，先从未入选宫补，再从已入选宫取未入选的号（兜底，确保凑满 poolSize）
+  // 若池未满，兜底：从全九宫按大中小段依次补齐
   if(picks.length<poolSize){
-    const pickedSet={};
-    picks.forEach(n=>{pickedSet[n]=1;});
-    const usedGongs={};
-    trace.forEach(t=>{usedGongs[t.gong.id]=1;});
-    // 第一轮：未入选宫
-    for(let gi=0;gi<GONG_INFO.length&&picks.length<poolSize;gi++){
-      const g=GONG_INFO[gi];
-      if(usedGongs[g.id])continue;
-      const cands=gongNumCandidates(g.houTian,bigStart,midStart,lotCfg.maxFront);
-      const all=cands.big.concat(cands.mid).concat(cands.sml);
-      for(const n of all){
-        if(picks.length>=poolSize)break;
-        if(!pickedSet[n]){pickedSet[n]=1;picks.push(n);}
-      }
-    }
-    // 第二轮：已入选宫中尚未取完的号
-    for(let gi=0;gi<GONG_INFO.length&&picks.length<poolSize;gi++){
-      const g=GONG_INFO[gi];
-      const cands=gongNumCandidates(g.houTian,bigStart,midStart,lotCfg.maxFront);
-      const all=cands.big.concat(cands.mid).concat(cands.sml);
-      for(const n of all){
-        if(picks.length>=poolSize)break;
-        if(!pickedSet[n]){pickedSet[n]=1;picks.push(n);}
+    const used={};
+    picks.forEach(n=>{used[n]=1;});
+    const segs=["big","mid","sml"];
+    for(const o of scored){
+      if(picks.length>=poolSize)break;
+      const cands=gongNumCandidates(o.g.houTian,midStart,bigStart,lotCfg.maxFront);
+      for(const key of segs){
+        for(const n of cands[key]){
+          if(picks.length>=poolSize)break;
+          if(!used[n]){used[n]=1;picks.push(n);}
+        }
       }
     }
   }
@@ -701,7 +673,8 @@ function validCombo(c,lotCfg){
 function combos(arr,k,lotCfg){
   const out=[];
   const n=arr.length;
-  const idx=[];for(let i=0;i<k;i++)idx[i]=i;
+  const idx=[];
+  for(let i=0;i<k;i++)idx[i]=i;
   while(true){
     const c=idx.map(i=>arr[i]);
     if(validCombo(c,lotCfg))out.push(c.slice());
@@ -715,19 +688,14 @@ function combos(arr,k,lotCfg){
   }
   return out;
 }
-/* 旋转矩阵近似：覆盖表思想
-   从全组合中贪心选注，使每对/每三元覆盖最大化
-   这里用简化贪心：每注选与前几注重叠最少的组合
-*/
+/* 旋转矩阵近似：贪心覆盖，使各注间重叠最少 */
 function rotatePick(pool,k,zhuCount,lotCfg){
   const all=combos(pool,k,lotCfg);
   if(all.length===0)return [];
   const picked=[];
-  // 先按和值接近区间中值排序
   const mid=(lotCfg.sumMin+lotCfg.sumMax)/2;
   all.sort((a,b)=>Math.abs(sumArr(a)-mid)-Math.abs(sumArr(b)-mid));
   const used=new Array(all.length).fill(false);
-  // 元素覆盖计数
   const cover={};
   const covInc=c=>{c.forEach(x=>{cover[x]=(cover[x]||0)+1;});};
   const covScore=c=>{let s=0;c.forEach(x=>{s+=(cover[x]||0);});return s;};
@@ -776,7 +744,7 @@ function log(msg,area){
 function clearLog(){el("fullLog").innerHTML="";}
 function pad2(n){return n<10?"0"+n:""+n;}
 
-function renderGong(poolRes){
+function renderGong(poolRes,pan){
   const scored=poolRes.scored;
   const used={};
   poolRes.trace.forEach(t=>{used[t.gong.id]=t;});
@@ -837,7 +805,7 @@ function renderPool(poolRes,lotCfg){
   h+=`<div class='poolLine' style='margin-top:6px;border-top:1px dashed #334155;padding-top:6px;'>`;
   h+=`<b>号码池（${poolRes.picks.length}码，去重）：</b>`;
   poolRes.picks.forEach(n=>{
-    const seg=n>=lotCfg.bigStart?"tBig":(n>=lotCfg.midStart?"tMid":"tSml");
+    const seg=n>lotCfg.bigStart?"tBig":(n>=lotCfg.midStart?"tMid":"tSml");
     h+=`<span class="numTag ${seg}">${n}</span>`;
   });
   h+="</div>";
@@ -876,8 +844,8 @@ function getLotCfg(){
     maxBack:isDlt?12:16,
     poolSize:Math.max(8,Math.min(28,parseInt(el("poolSize").value,10)||16)),
     minAbs:parseInt(el("minAbs").value,10)||0,
-    bigStart:Math.max(10,Math.min(30,parseInt(el("bigStart").value,10)||21)),
-    midStart:Math.max(5,Math.min(20,parseInt(el("midStart").value,10)||11)),
+    midStart:Math.max(2,Math.min(30,parseInt(el("midStart").value,10)||15)),
+    bigStart:Math.max(3,Math.min(35,parseInt(el("bigStart").value,10)||25)),
     sumMin:parseInt(el("sumMin").value,10)||0,
     sumMax:parseInt(el("sumMax").value,10)||999,
     oddEven:el("oddEven").value,
@@ -913,7 +881,7 @@ function runPan(){
   poolRes.scored.forEach(o=>log(`  ${o.g.name}：${o.score>=0?"+":""}${o.score}  绝对值${Math.abs(o.score)}  ${o.score>=0?"高分":"负分高分"}`));
   poolRes.trace.forEach(t=>log(`  ${t.name}（${t.score}）${t.rel} → 取${t.size}：${t.taken.join(",")||"无"}`));
   log(`号码池：${poolRes.picks.join(",")}（${poolRes.picks.length}码）`);
-  renderGong(poolRes);
+  renderGong(poolRes,pan);
   renderPool(poolRes,cfg);
 
   log("\n=== 组注 ===");
