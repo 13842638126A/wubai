@@ -715,18 +715,51 @@ function rotatePick(pool,k,zhuCount,lotCfg){
   }
   return picked;
 }
+/* 后区取号：按彩种 backCount 取（大乐透2码 / 双色球1码）
+   从号码池内后区候选中组合，避免重复单调取同一个值
+*/
+function pickBack(backPool,k,count){
+  const out=[];
+  if(!backPool||backPool.length===0)return out;
+  const pool=backPool.slice().sort((a,b)=>a-b);
+  if(pool.length<k){
+    // 候选不足时允许重复组合，保证每注数量正确
+    for(let i=0;i<count;i++){
+      const t=[];
+      for(let j=0;j<k;j++)t.push(pool[i*0?j:j%pool.length]);
+      out.push(t);
+    }
+    return out;
+  }
+  const all=[];
+  const n=pool.length;
+  const idx=[];
+  for(let i=0;i<k;i++)idx[i]=i;
+  while(true){
+    all.push(idx.map(i=>pool[i]));
+    let i=k-1;
+    while(i>=0&&idx[i]===n-k+i)i--;
+    if(i<0)break;
+    idx[i]++;
+    for(let j=i+1;j<k;j++)idx[j]=idx[j-1]+1;
+  }
+  for(let i=0;i<count;i++){
+    out.push(all[i%all.length].slice().sort((a,b)=>a-b));
+  }
+  return out;
+}
 function generateZhu(poolRes,lotCfg){
-  const {picks}=poolRes;
+  const picks=poolRes.picks;
   const zhuCount=lotCfg.zhuCount;
   const frontK=lotCfg.frontCount;
+  const backK=lotCfg.backCount;
   const frontPool=picks.filter(x=>x<=lotCfg.maxFront);
   const backPool=picks.filter(x=>x<=lotCfg.maxBack);
   const front=rotatePick(frontPool,frontK,zhuCount,lotCfg);
+  const backList=pickBack(backPool,backK,zhuCount);
   const zhu=[];
   for(let i=0;i<front.length;i++){
-    const b=backPool.length>0
-      ? [backPool[i%backPool.length]]
-      : [];
+    const b=backList[i]||[];
     zhu.push({front:front[i].slice().sort((a,b)=>a-b),back:b.slice().sort((a,b)=>a-b)});
   }
   return zhu;
