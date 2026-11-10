@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>离线拆补奇门｜权重自动寻优｜生子救母九星31字</title>
+<title>离线拆补奇门｜权重自动寻优沙盘【修复版】</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:"Microsoft YaHei",system-ui,sans-serif;}
 body{background:#0c101b;color:#e8edf7;padding:12px;font-size:16px;line-height:1.5;}
@@ -40,7 +40,7 @@ textarea{width:100%;min-height:100px;}
 </style>
 </head>
 <body>
-<h1>离线拆补奇门｜权重自动寻优沙盘</h1>
+<h1>离线拆补奇门｜权重自动寻优沙盘【修复版】</h1>
 
 <div class="block">
 <h2>基础设置</h2>
@@ -205,6 +205,8 @@ class QimenSimple{
             this.gongData[i].kongWang=((i===2)||(i===6));
             this.gongData[i].fuYin=(i===1);
             this.gongData[i].fanYin=(i===3);
+            this.gongData[i].chongGe = false;
+            this.gongData[i].liuHeGe = false;
         }
     }
     getPan(){return this.gongData;}
@@ -247,7 +249,7 @@ let historyList = [];
 //寻优全局
 let optStopFlag=false;
 let bestWeight=null;
-let bestAvg=‑999;
+let bestAvg=-999;
 
 //============工具函数============
 function expandNumList(baseArr,maxNum){
@@ -259,7 +261,7 @@ function expandNumList(baseArr,maxNum){
             cur +=10;
         }
     }
-    return [...new Set(out)].sort((a,b)=>a‑b);
+    return [...new Set(out)].sort((a,b)=>a-b);
 }
 
 function getWxRel(baseWx,gongWx){
@@ -358,7 +360,7 @@ function execOne(qDate,shiChen,wt){
             allNumPool=allNumPool.concat(dn);
         }
     });
-    allNumPool=[...new Set(allNumPool)].sort((a,b)=>a‑b);
+    allNumPool=[...new Set(allNumPool)].sort((a,b)=>a-b);
     return {pan,gongScoreList,allNumPool,riGan,shiGan,ju,isDunYang,xunKongArr,baseWxKey};
 }
 
@@ -384,7 +386,7 @@ function runSingle(){
         let cls="low";
         if(n%3!==0)cls="mid";
         if(n%5===0)cls="high";
-        html+=`<span class="pool‑num ${cls}">${String(n).padStart(2,'0')}</span>`;
+        html+=`<span class="pool-num ${cls}">${String(n).padStart(2,'0')}</span>`;
     });
     poolDom.innerHTML=html;
 
@@ -575,7 +577,7 @@ function exportCsv(){
     historyList.forEach(r=>{
         csv += `${r.date},${r.shiChen},${r.lotType},${r.yangYin},${r.ju},${r.baseWx},"${r.pool.join(" ")}","${r.open.join(" ")}",${r.hit.length}\n`;
     });
-    const blob = new Blob([csv],{type:"text/csv;charset=utf‑8"});
+    const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
     const a = document.createElement("a");
     a.href=URL.createObjectURL(blob);
     a.download="奇门_完整回测记录.csv";
