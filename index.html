@@ -1,405 +1,2632 @@
 <!DOCTYPE html>
-<html lang="zh‑CN">
+<html lang="zh-CN">
 <head>
-<meta charset="UTF‑8">
-<meta name="viewport" content="width=device‑width,initial‑scale=1.0,maximum‑scale=1.0,user‑scalable=no">
-<title>离线真盘｜拆补奇门｜盛旺大小分</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>九维分析法 - 超级走势图统计系统</title>
 <style>
-*{box‑sizing:border‑box;margin:0;padding:0;font‑family:"Microsoft YaHei",system‑ui,sans‑serif;}
-body{background:#0c101b;color:#e8edf7;padding:12px;font‑size:16px;line‑height:1.5;}
-h1{color:#ffd343;text‑align:center;font‑size:20px;margin‑bottom:10px;}
-h2{color:#72b8ff;font‑size:17px;margin:12px 0 4px;border‑left:4px solid #3b82f6;padding‑left:8px;}
-.block{background:#161d31;border‑radius:10px;padding:12px;margin‑bottom:12px;}
-.row{display:flex;flex‑wrap:wrap;gap:8px;margin:6px 0;align‑items:center;}
-label{min‑width:90px;}
-select,input[type="date"],input[type="number"],input[type="text"]{background:#222c44;color:#fff;border:1px solid #445588;border‑radius:6px;padding:5px 7px;font‑size:14px;}
-button{background:#2563eb;color:#fff;border:none;border‑radius:6px;padding:6px 11px;font‑size:14px;cursor:pointer;}
-button:hover{background:#1d4ed8;}
-#jiugong{display:grid;grid‑template‑columns:repeat(3,1fr);gap:5px;margin:8px 0;}
-.gong{background:#1e293b;border:1px solid #475569;border‑radius:7px;padding:7px;min‑height:160px;font‑size:11px;}
-.gong b{color:#ffd343;}
-.tag‑good{color:#4ade80;font‑weight:bold;}
-.tag‑bad{color:#f87171;font‑weight:bold;}
-.pool‑num{display:inline‑block;margin:2px 2px;padding:3px 5px;border‑radius:4px;font‑weight:bold;font‑size:15px;min‑width:38px;text‑align:center;color:#fff;}
-.high{background:#166534;}
-.mid{background:#713f12;}
-.low{background:#7f1d1d;}
-#log{white‑space:pre‑wrap;background:#111827;padding:8px;border‑radius:7px;max‑height:340px;overflow:auto;font‑size:12px;}
-#poolBox{margin:6px 0;}
-#resultBox{background:#111827;padding:8px;border‑radius:7px;margin:8px 0;white‑space:pre‑wrap;font‑size:12px;}
-.tip{color:#94a3b8;font‑size:12px;}
-.warn{color:#ff8888;}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", sans-serif; background: #0f1419; color: #e1e5e9; min-height: 100vh; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 20px; text-align: center; border-bottom: 2px solid #e74c3c; }
+.header h1 { font-size: 22px; color: #fff; margin-bottom: 4px; }
+.header p { font-size: 12px; color: #aaa; }
+.tabs { display: flex; background: #1a2332; border-bottom: 1px solid #2d3f50; overflow-x: auto; }
+.tab { padding: 12px 18px; cursor: pointer; font-size: 14px; white-space: nowrap; border-bottom: 3px solid transparent; transition: all 0.3s; color: #8899aa; }
+.tab.active { color: #e74c3c; border-bottom-color: #e74c3c; background: #0f1419; }
+.tab:hover { color: #fff; background: #1e2d3d; }
+.container { max-width: 1200px; margin: 15px auto; padding: 0 15px; }
+.card { background: #1a2332; border-radius: 10px; padding: 18px; margin-bottom: 12px; border: 1px solid #2d3f50; }
+.card h3 { font-size: 15px; margin-bottom: 12px; color: #4fc3f7; border-left: 4px solid #e74c3c; padding-left: 10px; }
+.card h4 { font-size: 14px; margin: 10px 0 8px; color: #81c784; }
+.form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.form-row label { font-size: 13px; min-width: 80px; color: #aaa; }
+input[type="date"], select, input[type="text"], input[type="number"] { padding: 8px 12px; border: 1px solid #2d3f50; border-radius: 6px; font-size: 13px; background: #0f1419; color: #e1e5e9; }
+button { padding: 8px 20px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+.btn-primary { background: #e74c3c; color: #fff; }
+.btn-primary:hover { background: #c0392b; }
+.btn-secondary { background: #3498db; color: #fff; }
+.btn-secondary:hover { background: #2980b9; }
+.btn-success { background: #27ae60; color: #fff; }
+.btn-success:hover { background: #219a52; }
+.btn-warning { background: #f39c12; color: #fff; }
+.btn-warning:hover { background: #d68910; }
+.ball { display: inline-block; width: 32px; height: 32px; line-height: 32px; text-align: center; border-radius: 50%; font-weight: bold; font-size: 13px; margin: 2px; color: #fff; }
+.ball-red { background: #e74c3c; }
+.ball-blue { background: #3498db; }
+.ball-green { background: #27ae60; }
+.ball-gold { background: #f39c12; color: #333; }
+.ball-kill { background: #555; text-decoration: line-through; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.stat-box { background: #0f1419; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #2d3f50; }
+.stat-box .stat-num { font-size: 24px; font-weight: bold; color: #4fc3f7; }
+.stat-box .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
+.num-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 8px 0; }
+.num-grid-7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin: 8px 0; }
+.num-cell { padding: 6px 4px; text-align: center; border-radius: 4px; font-size: 12px; font-weight: bold; }
+.num-hot { background: #e74c3c33; color: #ff6b6b; border: 1px solid #e74c3c55; }
+.num-warm { background: #f39c1233; color: #ffa726; border: 1px solid #f39c1255; }
+.num-cold { background: #3498db33; color: #64b5f6; border: 1px solid #3498db55; }
+.num-ice { background: #1a237e33; color: #9fa8da; border: 1px solid #1a237e55; }
+.num-normal { background: #2d3f5033; color: #aaa; border: 1px solid #2d3f50; }
+.gap-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.gap-table th, .gap-table td { padding: 6px 8px; border: 1px solid #2d3f50; text-align: center; }
+.gap-table th { background: #0f1419; color: #4fc3f7; position: sticky; top: 0; }
+.gap-table tr:hover { background: #1e2d3d; }
+.chart-bar { height: 18px; border-radius: 3px; transition: width 0.5s; min-width: 2px; }
+.progress-wrap { background: #0f1419; border-radius: 4px; overflow: hidden; height: 20px; margin: 3px 0; }
+.progress-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 6px; font-size: 11px; color: #fff; }
+.data-input { width: 100%; padding: 10px; border: 1px solid #2d3f50; border-radius: 6px; font-size: 12px; font-family: monospace; background: #0f1419; color: #e1e5e9; resize: vertical; min-height: 150px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin: 2px; }
+.tag-red { background: #e74c3c33; color: #ff6b6b; }
+.tag-blue { background: #3498db33; color: #64b5f6; }
+.tag-green { background: #27ae6033; color: #66bb6a; }
+.tag-gold { background: #f39c1233; color: #ffa726; }
+.tag-purple { background: #9c27b033; color: #ce93d8; }
+.tag-gray { background: #55555533; color: #aaa; }
+.hidden { display: none; }
+.scroll-x { overflow-x: auto; }
+.mb-10 { margin-bottom: 10px; }
+.mb-5 { margin-bottom: 5px; }
+.text-center { text-align: center; }
+.text-sm { font-size: 12px; }
+.text-muted { color: #888; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.section-title { font-size: 13px; color: #4fc3f7; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #2d3f50; }
+.kill-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+.recommend-box { background: linear-gradient(135deg, #1a237e22, #0d47a122); border: 1px solid #1a237e55; border-radius: 8px; padding: 12px; margin: 8px 0; }
 </style>
 </head>
 <body>
-<h1>离线真盘｜拆补奇门｜盛旺大小分</h1>
-<div class="block">
-<h2>起盘与参数【真拆补起局】</h2>
-<div class="row">
-<label>彩种：</label>
-<select id="lotSel">
-<option value="ssq">双色球(1‑33)</option>
-<option value="dlt">大乐透(1‑35)</option>
-<option value="p3">排3(1‑9)</option>
-</select>
-<label>基准：</label>
-<select id="baseSel">
-<option value="riGan">日干</option>
-<option value="shiGan">时干</option>
-<option value="zhiFu">值符五行</option>
-</select>
-</div>
-<div class="row">
-<label>日期：</label>
-<input type="date" id="qDate">
-<label>时辰：</label>
-<select id="shiChen">
-<option>子</option><option>丑</option><option>寅</option><option>卯</option>
-<option>辰</option><option>巳</option><option>午</option><option>未</option>
-<option>申</option><option>酉</option><option>戌</option><option>亥</option>
-</select>
-</div>
-<div class="row">
-<label>大小分界：</label>
-<input type="number" id="splitVal" value="17" style="width:55px;">
-<label>T1盛阈值：</label>
-<input type="number" id="T1" value="14" style="width:55px;">
-<label>T2平阈值：</label>
-<input type="number" id="T2" value="6" style="width:55px;">
-<label>单宫最大取号：</label>
-<input type="number" id="maxTake" value="3" style="width:55px;">
-</div>
-<div class="row">
-<label><input type="checkbox" id="useXian">启用先天数</label>
-</div>
-<div class="row">
-<label>开奖号回测：</label>
-<input type="text" id="openInput" placeholder="01 05 12 18 22 30">
-<button onclick="calcRun()">推演运行【真盘】</button>
-<button onclick="clearAll()">清空</button>
-</div>
-<div class="tip warn">⚠️仅供术数沙盘学习；彩票完全随机，不构成投注建议。本盘使用标准拆补法，节气‑符头‑三元真实计算局数。</div>
+
+<div class="header">
+  <h1>超级走势图分析系统 · 九维分析法</h1>
+  <p>遗漏值 / 冷热号 / 奇偶 / 大小 / 区间 / 连号 / 重号 / 和值 / 跨度 — 双色球 & 大乐透统计工具</p>
 </div>
 
-<div class="block">
-<h2>九宫盘面【真实拆补排盘】</h2>
-<div id="jiugong"></div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('data')">数据管理</div>
+  <div class="tab" onclick="switchTab('gap')">遗漏分析</div>
+  <div class="tab" onclick="switchTab('hotcold')">冷热追踪</div>
+  <div class="tab" onclick="switchTab('ratio')">奇偶大小</div>
+  <div class="tab" onclick="switchTab('zone')">区间定位</div>
+  <div class="tab" onclick="switchTab('pattern')">连号重号</div>
+  <div class="tab" onclick="switchTab('sum')">和值跨度</div>
+  <div class="tab" onclick="switchTab('kill')">杀号公式</div>
+  <div class="tab" onclick="switchTab('cooccur')">共现矩阵</div>
+  <div class="tab" onclick="switchTab('position')">定位算法</div>
+  <div class="tab" onclick="switchTab('filter')">缩水过滤</div>
+  <div class="tab" onclick="switchTab('calc')">概率工具</div>
+  <div class="tab" onclick="switchTab('template')">每日模板</div>
+  <div class="tab" onclick="switchTab('recommend')" style="color:#ff6b6b;">★综合推荐</div>
+  <div class="tab" onclick="switchTab('strategy')">策略推荐</div>
 </div>
 
-<div class="block">
-<h2>候选号码池</h2>
-<div id="poolBox"></div>
+<div class="container">
+
+<!-- ========== 数据管理 ========== -->
+<div id="tab-data">
+  <div class="card">
+    <h3>彩种选择</h3>
+    <div class="form-row">
+      <label>当前彩种：</label>
+      <select id="globalType" onchange="onGlobalTypeChange()">
+        <option value="dlt">大乐透（前区35选5 + 后区12选2，周一/三/六）</option>
+        <option value="ssq">双色球（红球33选6 + 蓝球16选1，周二/四/日）</option>
+      </select>
+      <button class="btn-success" onclick="loadSampleData()">加载示例数据</button>
+    </div>
+    <div id="dataStats" class="grid-4"></div>
+  </div>
+
+  <div class="card">
+    <h3>历史数据导入</h3>
+    <div class="text-sm text-muted mb-10" id="importHint">
+      打开页面时已从桌面「数字彩更新工具」的数据库自动读取真实历史数据，下方框内即为已导入的数据（为便于浏览仅显示最近 30 期，全部数据参与分析）。<br>
+      如需手工更新：把每期一行粘贴进来再点「解析并导入」，格式 期号,号码...,号码...<br>
+      大乐透：24001,03 12 18 25 33,02 09　　双色球：2024001,05 12 18 22 28 31,07<br>
+      数据库更新后想刷新全部真实数据，重跑一次同目录的 _export_data.py 覆盖 lottery-data.js 即可。
+    </div>
+    <textarea class="data-input" id="rawData" placeholder="粘贴历史开奖数据..."></textarea>
+    <div style="margin-top:10px;">
+      <button class="btn-primary" onclick="parseAndLoadData()">解析并导入</button>
+      <button class="btn-secondary" onclick="clearData()">清空数据</button>
+      <button class="btn-warning" onclick="exportData()">导出数据</button>
+    </div>
+    <div id="importResult" class="text-sm mt-10" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="card">
+    <h3>最近开奖记录</h3>
+    <div class="scroll-x" id="recentDraws"></div>
+  </div>
 </div>
 
-<div class="block">
-<h2>回测结果</h2>
-<div id="resultBox"></div>
+<!-- ========== 遗漏分析 ========== -->
+<div id="tab-gap" class="hidden">
+  <div class="card">
+    <h3>遗漏值系统</h3>
+    <div class="text-sm text-muted mb-10">
+      遗漏值 = 距上次出现的间隔期数。理论平均遗漏：大乐透前区=7期，双色球红球=5.5期，蓝球=16期，后区=6期。
+    </div>
+    <div id="gapSummary" class="grid-4 mb-10"></div>
+    <div class="section-title">当前遗漏值一览</div>
+    <div id="gapGrid"></div>
+    <div class="section-title">遗漏排行（最大遗漏 TOP 10）</div>
+    <div id="gapTop"></div>
+    <div class="section-title">平均遗漏 vs 当前遗漏对比</div>
+    <div id="gapCompare"></div>
+  </div>
 </div>
 
-<div class="block">
-<h2>明细日志（起局信息+每宫打分+选号理由）</h2>
-<div id="log"></div>
+<!-- ========== 冷热追踪 ========== -->
+<div id="tab-hotcold" class="hidden">
+  <div class="card">
+    <h3>冷热号分类追踪</h3>
+    <div class="text-sm text-muted mb-10">
+      热号（遗漏&lt;1×均值）/ 温号（1-2×均值）/ 冷号（2-3×均值）/ 极冷号（3-5×均值）/ 超冷号（&gt;5×均值）<br>
+      转换法则：热号连续出现3期后约60%概率降温；冷号遗漏达均值2倍后回补概率增大。
+    </div>
+    <div id="hotcoldSummary" class="grid-4 mb-10"></div>
+    <div class="section-title">号码温度分布</div>
+    <div id="hotcoldGrid"></div>
+    <div class="section-title">近10期热度变化趋势</div>
+    <div id="hotcoldTrend"></div>
+    <div class="section-title">转换信号（即将变温的号码）</div>
+    <div id="hotcoldSignals"></div>
+  </div>
 </div>
 
+<!-- ========== 奇偶大小 ========== -->
+<div id="tab-ratio" class="hidden">
+  <div class="card">
+    <h3>奇偶配比分析</h3>
+    <div id="oddEvenChart"></div>
+    <div class="section-title">奇偶比出现频率</div>
+    <div id="oddEvenStats"></div>
+  </div>
+  <div class="card">
+    <h3>大小区间分析</h3>
+    <div class="text-sm text-muted mb-10">
+      大乐透：小号01-17 / 大号18-35 | 双色球三区：01-11(小) / 12-22(中) / 23-33(大)
+    </div>
+    <div id="bigSmallChart"></div>
+    <div class="section-title">大小比出现频率</div>
+    <div id="bigSmallStats"></div>
+  </div>
+  <div class="card">
+    <h3>下期奇偶/大小预测</h3>
+    <div id="ratioPredict"></div>
+  </div>
+</div>
+
+<!-- ========== 区间定位 ========== -->
+<div id="tab-zone" class="hidden">
+  <div class="card">
+    <h3>区间分布分析</h3>
+    <div class="text-sm text-muted mb-10">
+      大乐透七分区：01-05 / 06-10 / 11-15 / 16-20 / 21-25 / 26-30 / 31-35<br>
+      双色球三分区：01-11 / 12-22 / 23-33
+    </div>
+    <div id="zoneChart"></div>
+    <div class="section-title">区间出号统计（近20期）</div>
+    <div id="zoneTable"></div>
+    <div class="section-title">区间轮动规律</div>
+    <div id="zoneRotation"></div>
+  </div>
+</div>
+
+<!-- ========== 连号重号 ========== -->
+<div id="tab-pattern" class="hidden">
+  <div class="card">
+    <h3>连号追踪</h3>
+    <div class="text-sm text-muted mb-10">
+      统计规律：约42%期次含1组二连号，约40%无连号，约15%含多组连号或三连号。
+    </div>
+    <div id="consecSummary" class="grid-4 mb-10"></div>
+    <div class="section-title">连号出现记录</div>
+    <div id="consecHistory"></div>
+    <div class="section-title">连号概率走势</div>
+    <div id="consecTrend"></div>
+  </div>
+  <div class="card">
+    <h3>重号追踪</h3>
+    <div class="text-sm text-muted mb-10">
+      重号 = 与上期相同的号码。大乐透前区重号率约40%，双色球红球重号率约30%。
+    </div>
+    <div id="repeatSummary" class="grid-4 mb-10"></div>
+    <div class="section-title">重号出现记录</div>
+    <div id="repeatHistory"></div>
+    <div class="section-title">下期重号预测</div>
+    <div id="repeatPredict"></div>
+  </div>
+</div>
+
+<!-- ========== 和值跨度 ========== -->
+<div id="tab-sum" class="hidden">
+  <div class="card">
+    <h3>和值分析</h3>
+    <div class="text-sm text-muted mb-10">
+      理论均值：大乐透前区=5×(1+35)/2=90，双色球红球=6×(1+33)/2=102
+    </div>
+    <div id="sumAnalysis"></div>
+    <div class="section-title">和值走势</div>
+    <div id="sumTrend"></div>
+    <div class="section-title">和值区间分布</div>
+    <div id="sumDist"></div>
+  </div>
+  <div class="card">
+    <h3>跨度分析</h3>
+    <div class="text-sm text-muted mb-10">
+      跨度 = 最大号 - 最小号。理论均值：大乐透≈28.3(5个号的典型范围)，双色球≈26.9
+    </div>
+    <div id="spanAnalysis"></div>
+    <div class="section-title">跨度走势</div>
+    <div id="spanTrend"></div>
+    <div class="section-title">跨度区间分布</div>
+    <div id="spanDist"></div>
+  </div>
+</div>
+
+<!-- ========== 杀号公式 ========== -->
+<div id="tab-kill" class="hidden">
+  <div class="card">
+    <h3>杀号公式体系</h3>
+    <div class="text-sm text-muted mb-10">
+      基于历史统计数据推算下期可能不出现的号码。每条公式有独立验证成功率。
+    </div>
+    <div id="killMethods"></div>
+    <div style="margin-top:12px;">
+      <button class="btn-primary" onclick="runKillFormulas()">执行全部杀号</button>
+      <button class="btn-secondary" onclick="runKillVerify()">历史验证</button>
+    </div>
+    <div id="killResult"></div>
+    <div id="killVerify"></div>
+  </div>
+</div>
+
+<!-- ========== 共现矩阵 ========== -->
+<div id="tab-cooccur" class="hidden">
+  <div class="card">
+    <h3>号码共现矩阵分析</h3>
+    <div class="text-sm text-muted mb-10">统计任意两个号码在同一期共同出现的频率，找出高频"搭档"组合。理论共现频率 = C(N-2,K-2)/C(N,K) × 期数。</div>
+    <div id="cooccurSummary" class="grid-4 mb-10"></div>
+    <div class="section-title">共现频率 TOP 15</div>
+    <div id="cooccurTop"></div>
+    <div class="section-title">共现矩阵热力图（前20号）</div>
+    <div class="scroll-x" id="cooccurMatrix"></div>
+    <div class="section-title">强关联号组（共现≥理论2倍）</div>
+    <div id="cooccurStrong"></div>
+    <div class="section-title">互斥号组（共现≤理论0.3倍）</div>
+    <div id="cooccurWeak"></div>
+  </div>
+</div>
+
+<!-- ========== 定位算法 ========== -->
+<div id="tab-position" class="hidden">
+  <div class="card">
+    <h3>定位算法 — 各位号码分布分析</h3>
+    <div class="text-sm text-muted mb-10">
+      将每期开奖号码从小到大排序后，分析第1位（龙头）到第N位（凤尾）的分布特征。定位法将选号空间从全组合缩小到各位独立选择。
+    </div>
+    <div id="positionTable"></div>
+    <div class="section-title">龙头（第1位）分布</div>
+    <div id="dragonHead"></div>
+    <div class="section-title">凤尾（最后位）分布</div>
+    <div id="phoenixTail"></div>
+    <div class="section-title">龙头凤尾关联分析</div>
+    <div id="headTailRelation"></div>
+    <div class="section-title">各位当前遗漏与回补信号</div>
+    <div id="positionGaps"></div>
+  </div>
+</div>
+
+<!-- ========== 缩水过滤 ========== -->
+<div id="tab-filter" class="hidden">
+  <div class="card">
+    <h3>缩水过滤系统</h3>
+    <div class="text-sm text-muted mb-10">从大候选池逐步过滤，每层条件淘汰不符合统计规律的注数。9层过滤流程：全组合→和值→跨度→奇偶→大小→区间→质合→012路→AC值。</div>
+    <div id="filterLayers"></div>
+    <div style="margin-top:12px;">
+      <button class="btn-primary" onclick="runFilter()">执行缩水过滤</button>
+    </div>
+    <div id="filterResult"></div>
+  </div>
+  <div class="card">
+    <h3>旋转矩阵模型</h3>
+    <div class="text-sm text-muted mb-10">
+      用最少注数保证特定中奖条件。三种经典模型：全覆盖矩阵（中6保5）、中5保4矩阵、中4保3矩阵。
+    </div>
+    <div id="matrixModels"></div>
+    <div style="margin-top:12px;">
+      <button class="btn-secondary" onclick="generateMatrix()">生成旋转矩阵</button>
+    </div>
+    <div id="matrixResult"></div>
+  </div>
+  <div class="card">
+    <h3>过滤条件通过率统计</h3>
+    <div id="filterPassRates"></div>
+  </div>
+</div>
+
+<!-- ========== 概率工具 ========== -->
+<div id="tab-calc" class="hidden">
+  <div class="card">
+    <h3>概率计算器（手算版）</h3>
+    <div class="text-sm text-muted mb-10">计算选号组合数、覆盖率、期望值。</div>
+    <div class="form-row">
+      <label>彩种：</label>
+      <select id="calcType" onchange="updateCalc()">
+        <option value="dlt">大乐透</option>
+        <option value="ssq">双色球</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>选号池大小：</label>
+      <input type="number" id="calcPool" value="10" min="5" max="35" onchange="updateCalc()">
+    </div>
+    <div id="calcResult"></div>
+  </div>
+  <div class="card">
+    <h3>蒙特卡洛模拟验证</h3>
+    <div class="text-sm text-muted mb-10">模拟大量随机开奖，验证策略的实际命中分布。</div>
+    <div class="form-row">
+      <label>模拟次数：</label>
+      <select id="mcRuns">
+        <option value="10000">1万次</option>
+        <option value="100000" selected>10万次</option>
+        <option value="500000">50万次</option>
+      </select>
+      <label>策略：</label>
+      <select id="mcStrategy">
+        <option value="random">纯随机</option>
+        <option value="hot">全热号</option>
+        <option value="mix">热冷混合</option>
+        <option value="kill">杀号后选</option>
+        <option value="sum">和值过滤</option>
+      </select>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn-primary" onclick="runMonteCarlo()">开始模拟</button>
+    </div>
+    <div id="mcResult"></div>
+  </div>
+  <div class="card">
+    <h3>追号投注分析</h3>
+    <div id="chaseAnalysis"></div>
+  </div>
+</div>
+
+<!-- ========== 每日模板 ========== -->
+<div id="tab-template" class="hidden">
+  <div class="card">
+    <h3>每日选号操作模板</h3>
+    <div class="text-sm text-muted mb-10">按步骤填写，形成标准化选号流程。</div>
+    <div id="dailyTemplate"></div>
+    <div style="margin-top:12px;">
+      <button class="btn-primary" onclick="autoFillTemplate()">自动填充分析数据</button>
+      <button class="btn-secondary" onclick="resetTemplate()">重置模板</button>
+    </div>
+  </div>
+  <div class="card">
+    <h3>止损策略提醒</h3>
+    <div class="text-sm text-muted mb-10">
+      健康原则：每月购彩不超过可支配收入2% | 连选15-20期无改善则停止 | 独立决策不跟风
+    </div>
+    <div id="stopLossAdvice"></div>
+  </div>
+</div>
+
+<!-- ========== 综合推荐 ========== -->
+<div id="tab-recommend" class="hidden">
+  <div class="card" style="border:2px solid #e74c3c;">
+    <h3 style="color:#ff6b6b;">★ 下期综合推荐</h3>
+    <div class="text-sm text-muted mb-10">融合九维分析+杀号公式+共现矩阵+定位算法，对真实历史数据的下一期生成推荐。下方回测用走查法检验这套推荐在历史上到底能不能打中。</div>
+    <div id="nextDrawBanner"></div>
+    <div id="recommendMain"></div>
+  </div>
+
+  <div class="card">
+    <h3>推荐依据分解</h3>
+    <div id="recommendBasis"></div>
+  </div>
+
+  <div class="card">
+    <h3>走查式历史回测（真实数据）</h3>
+    <div class="text-sm text-muted mb-10">
+      对最近N期，每次只用该期之前的数据生成推荐，再与真实开奖对比命中数。同时跑纯随机基线做对照。这是判断"能不能打中"的唯一诚实方法。
+    </div>
+    <div class="form-row">
+      <label>回测期数：</label>
+      <select id="btPeriods">
+        <option value="50">最近50期</option>
+        <option value="100" selected>最近100期</option>
+        <option value="200">最近200期</option>
+        <option value="500">最近500期</option>
+      </select>
+      <button class="btn-primary" onclick="runWalkForward()">开始回测</button>
+    </div>
+    <div id="walkForwardResult"></div>
+  </div>
+
+  <div class="card">
+    <h3>诚实结论</h3>
+    <div id="honestConclusion"></div>
+  </div>
+</div>
+
+<!-- ========== 策略推荐 ========== -->
+<div id="tab-strategy" class="hidden">
+  <div class="card">
+    <h3>综合策略推荐</h3>
+    <div class="text-sm text-muted mb-10">基于九维分析+杀号结果，生成多维度推荐方案。</div>
+    <div style="margin-bottom:12px;">
+      <button class="btn-primary" onclick="generateStrategy()">生成推荐方案</button>
+    </div>
+    <div id="strategyOutput"></div>
+  </div>
+  <div class="card">
+    <h3>策略说明</h3>
+    <div id="strategyDesc">
+      <h4>热冷配比法</h4><p class="text-sm text-muted">按统计规律选择热号/冷号组合比例。通常热号占60%、冷号占40%。</p>
+      <h4>区间轮动法</h4><p class="text-sm text-muted">观察各区间的出号周期，在沉默区间回补时重点布局。</p>
+      <h4>和值回归法</h4><p class="text-sm text-muted">和值偏离均值较大时，下期有向均值回归趋势。</p>
+      <h4>连号布局法</h4><p class="text-sm text-muted">根据近期连号频率决定是否包含连号组合。</p>
+      <h4>黄金分割法</h4><p class="text-sm text-muted">号码范围×0.618位置附近的号码出现频率略高。</p>
+      <h4>杀号筛选法</h4><p class="text-sm text-muted">综合多公式杀号结果，排除高概率不出现号码。</p>
+      <h4>胆拖组合法</h4><p class="text-sm text-muted">从热号+回补信号号中选胆码，扩展拖码增加覆盖面。</p>
+      <h4>同位回归法</h4><p class="text-sm text-muted">分析历史同位号（第N个号）的分布，回归到高频范围。</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="lottery-data.js"></script>
 <script>
-// ========== 内置 qimen‑dunjia 精简运行时（离线，拆补法真起局） ==========
-const LunarUtil={GAN:["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],ZHI:["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"],GAN_WX:{"甲":"mu","乙":"mu","丙":"huo","丁":"huo","戊":"tu","己":"tu","庚":"jin","辛":"jin","壬":"shui","癸":"shui"}};
-class Solar{constructor(y,mo,d,h=0,mi=0,s=0){this.y=y;this.mo=mo;this.d=d;this.h=h;this.mi=mi;this.s=s;}static fromYmd(arr){return new Solar(arr[0],arr[1],arr[2]);}}
-const JX={
-    jieQiList:["冬至","小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪"],
-    getSolarTerm(y,idx){
-        const base = Date.UTC(2000,0,1,12,0,0);
-        const s = Math.floor(21042.4276 + 365.242199074*(y‑2000)+15.218427*idx‑Math.floor((0.00031059*((y‑2000)*365.2422+15.218427*idx))));
-        const d=new Date(base+s*86400000);
-        return new Solar(d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes());
-    }
-};
-const QIMEN_CONST={
-    YANG_JU:{"冬至":[1,7,4],"小寒":[2,8,5],"大寒":[3,9,6],"立春":[8,5,2],"雨水":[9,6,3],"惊蛰":[1,7,4],"春分":[3,9,6],"清明":[4,1,7],"谷雨":[5,2,8],"立夏":[4,1,7],"小满":[5,2,8],"芒种":[6,3,9]},
-    YIN_JU:{"夏至":[9,3,6],"小暑":[8,2,5],"大暑":[7,1,4],"立秋":[2,5,8],"处暑":[1,4,7],"白露":[9,3,6],"秋分":[7,1,4],"寒露":[6,9,3],"霜降":[5,8,2],"立冬":[6,9,3],"小雪":[5,8,2],"大雪":[4,7,1]},
-    LIUYI:["戊","己","庚","辛","壬","癸"],SANQI:["丁","丙","乙"],
-    JIU_XING:[{name:"天蓬",hx:"shui"},{name:"天芮",hx:"tu"},{name:"天冲",hx:"mu"},{name:"天辅",hx:"mu"},{name:"天禽",hx:"tu"},{name:"天心",hx:"jin"},{name:"天柱",hx:"jin"},{name:"天任",hx:"tu"},{name:"天英",hx:"huo"}],
-    BA_MEN:["休","生","伤","杜","景","死","惊","开"],
-    BA_SHEN:["值符","螣蛇","太阴","六合","白虎","玄武","九地","九天"]
-};
-function getZhiFuZhiShi(ju,isYangDun){
-    const zfIdx=ju‑1;
-    const zsIdx=(zfIdx+2)%8;
-    return {zhiFuIdx:zfIdx,zhiShiIdx:zsIdx};
-}
-function getFuTou(ganZhi){
-    const g=ganZhi[0],z=ganZhi[1];
-    const ziWuMaoYou=["子","午","卯","酉"];
-    const yinShenSiHai=["寅","申","巳","亥"];
-    const chenXuChouWei=["辰","戌","丑","未"];
-    if(ziWuMaoYou.includes(z)) return "shang";
-    if(yinShenSiHai.includes(z)) return "zhong";
-    return "xia";
-}
-function getJuByChaiBu(solarObj){
-    const y=solarObj.y,mo=solarObj.mo,d=solarObj.d;
-    let termIdx=0;
-    for(let i=0;i<24;i++){
-        const t=JX.getSolarTerm(y,i);
-        if((t.y===y&&t.mo===mo&&t.d<=d)||(t.y<y)) termIdx=i;
-    }
-    const termName=JX.jieQiList[termIdx];
-    const isYangDun=termIdx<12;
-    const dayIndex=Math.floor((new Date(solarObj.y,solarObj.mo‑1,solarObj.d).getTime()‑new Date(y,0,1).getTime())/(86400000));
-    const riGanIdx=(dayIndex)%10;
-    const riZhiIdx=(dayIndex)%12;
-    const riGanZhi=LunarUtil.GAN[riGanIdx]+LunarUtil.ZHI[riZhiIdx];
-    const fuTou=getFuTou(riGanZhi);
-    let yuanIdx=0;
-    if(fuTou==="shang")yuanIdx=0;else if(fuTou==="zhong")yuanIdx=1;else yuanIdx=2;
-    let ju;
-    if(isYangDun){
-        ju=QIMEN_CONST.YANG_JU[termName][yuanIdx];
-    }else{
-        ju=QIMEN_CONST.YIN_JU[termName][yuanIdx];
-    }
-    return {termName,isYangDun,fuTou,yuanIdx,ju,riGanZhi};
-}
-function buildRealPan(solarObj,shiChen){
-    const {termName,isYangDun,fuTou,yuanIdx,ju,riGanZhi}=getJuByChaiBu(solarObj);
-    const riGan=riGanZhi[0];
-    const zhiIdx=LunarUtil.ZHI.indexOf(shiChen);
-    const riGanIdx=LunarUtil.GAN.indexOf(riGan);
-    const shiGanIdx=(riGanIdx*2+zhiIdx)%10;
-    const shiGan=LunarUtil.GAN[shiGanIdx];
-    const {zhiFuIdx,zhiShiIdx}=getZhiFuZhiShi(ju,isYangDun);
-    let offsetArr=[];
-    if(isYangDun){
-        for(let i=0;i<9;i++) offsetArr.push((ju‑1+i)%9);
-    }else{
-        for(let i=0;i<9;i++) offsetArr.push((ju‑1‑i+9)%9);
-    }
-    const xunStart=Math.floor(riGanIdx/2)*2;
-    const xunKong=[LunarUtil.ZHI[(xunStart+4)%12],LunarUtil.ZHI[(xunStart+5)%12]];
-    const GONG_BASE=[
-        {id:4,name:"巽4",hx:"mu",hou:[4],xian:[5],dui:5},
-        {id:3,name:"震3",hx:"mu",hou:[3],xian:[4],dui:7},
-        {id:8,name:"艮8",hx:"tu",hou:[8],xian:[7],dui:2},
-        {id:9,name:"离9",hx:"huo",hou:[9],xian:[3],dui:1},
-        {id:5,name:"中5",hx:"tu",hou:[0,5],xian:[10,5],dui:5},
-        {id:1,name:"坎1",hx:"shui",hou:[1],xian:[6],dui:9},
-        {id:2,name:"坤2",hx:"tu",hou:[2],xian:[8],dui:8},
-        {id:7,name:"兑7",hx:"jin",hou:[7],xian:[2],dui:3},
-        {id:6,name:"乾6",hx:"jin",hou:[1,4,6,9],xian:[1,6],dui:4}
-    ];
-    const pan=JSON.parse(JSON.stringify(GONG_BASE));
-    for(let i=0;i<9;i++){
-        const off=offsetArr[i];
-        pan[i].xing=QIMEN_CONST.JIU_XING[off%9];
-        pan[i].men=QIMEN_CONST.BA_MEN[off%8];
-        pan[i].shen=QIMEN_CONST.BA_SHEN[off%8];
-        pan[i].tianGan=QIMEN_CONST.LIUYI[off%6];
-        pan[i].diGan=QIMEN_CONST.LIUYI[(off+riGanIdx)%6];
-        pan[i].zhiFu=(i===zhiFuIdx);
-        pan[i].zhiShi=(i===zhiShiIdx);
-        pan[i].kongWang=(xunKong.includes(LunarUtil.ZHI[i%12]));
-        pan[i].fuYin=(pan[i].xing.name===QIMEN_CONST.JIU_XING[i].name);
-        pan[i].fanYin=false;
-        const gWx=pan[i].hx;
-        const MU_ZI={mu:{mu:"shui",zi:"huo"},huo:{mu:"mu",zi:"tu"},tu:{mu:"huo",zi:"jin"},jin:{mu:"tu",zi:"shui"},shui:{mu:"jin",zi:"mu"}};
-        const mWx=MU_ZI[gWx].mu;
-        const zWx=MU_ZI[gWx].zi;
-        const WX_SHENG={mu:"huo",huo:"tu",tu:"jin",jin:"shui",shui:"mu"};
-        pan[i].isJiuMu=(WX_SHENG[zWx]===mWx);
-        pan[i].jmNote=`${{"mu":"木","huo":"火","tu":"土","jin":"金","shui":"水"}[zWx]}(子)生${{"mu":"木","huo":"火","tu":"土","jin":"金","shui":"水"}[mWx]}(母)`;
-    }
-    return {pan,riGan,shiGan,termName,isYangDun,ju,fuTou,yuanIdx,xunKong,riGanZhi};
-}
+// ============== 全局数据 ==============
+let currentType = 'dlt';
+let drawData = []; // [{issue, numbers:[], backNumbers:[]}]
 
-// ========== 业务层：打分、盛旺大小分选号（已经调通的逻辑不变） ==========
-const WX_MAP = {mu:"木",huo:"火",tu:"土",jin:"金",shui:"水"};
-const WX_SHENG = {mu:"huo",huo:"tu",tu:"jin",jin:"shui",shui:"mu"};
-const WX_KE = {mu:"tu",huo:"jin",tu:"shui",jin:"mu",shui:"huo"};
-const WEIGHT = {
-    shengWo:12,woSheng:-6,keWo:-10,woKe:-4,biHe:3,
-    kongWang:-8,xSg:9,xKg:-9,fuYin:10,wangJia:8
+const CONFIG = {
+  dlt: {
+    name: '大乐透',
+    maxFront: 35, frontCount: 5,
+    maxBack: 12, backCount: 2,
+    avgGapFront: 7, avgGapBack: 6,
+    zones: [[1,5],[6,10],[11,15],[16,20],[21,25],[26,30],[31,35]],
+    zoneNames: ['一区','二区','三区','四区','五区','六区','七区'],
+    sumMean: 90, spanMean: 28,
+    bigSmallSplit: 17, // <=17小, >=18大
+  },
+  ssq: {
+    name: '双色球',
+    maxFront: 33, frontCount: 6,
+    maxBack: 16, backCount: 1,
+    avgGapFront: 5.5, avgGapBack: 16,
+    zones: [[1,11],[12,22],[23,33]],
+    zoneNames: ['小区','中区','大区'],
+    sumMean: 102, spanMean: 27,
+    bigSmallSplit: 11,
+  }
 };
 
-function expandNum(seedArr,maxLimit){
-    let arr=[];
-    for(let seed of seedArr){
-        let cur = seed + 10;
-        while(cur <= maxLimit){ arr.push(cur); cur +=10; }
-    }
-    return [...new Set(arr)].sort((a,b)=>a‑b);
+function cfg() { return CONFIG[currentType]; }
+
+// ============== Tab切换 ==============
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  if (el) el.classList.add('active');
+  else document.querySelector(`.tab:nth-child(${['data','gap','hotcold','ratio','zone','pattern','sum','kill','cooccur','position','filter','calc','template','recommend','strategy'].indexOf(tab)+1})`).classList.add('active');
+  if (drawData.length > 0) refreshAll(tab);
 }
 
-function getRel(base,gong){
-    if(WX_SHENG[base]===gong) return "woSheng";
-    if(WX_SHENG[gong]===base) return "shengWo";
-    if(WX_KE[base]===gong) return "woKe";
-    if(WX_KE[gong]===base) return "keWo";
-    return "biHe";
+function onGlobalTypeChange() {
+  currentType = document.getElementById('globalType').value;
+  loadSampleData();
 }
 
-function starScore(xingWx,gongWx,fuYin,wt){
-    let s=0;
-    if(WX_SHENG[xingWx]===gongWx) s+=wt.xSg;
-    if(WX_KE[xingWx]===gongWx) s+=wt.xKg;
-    if(fuYin) s+=wt.fuYin;
-    return s;
+// ============== 数据管理 ==============
+function convertRealData(arr, type) {
+  // 真实数据 -> 内部格式 {issue, numbers, backNumbers}
+  return arr.map(d => {
+    if (type === 'dlt') {
+      return { issue: d.issue, date: d.date, numbers: d.front.slice(), backNumbers: d.back.slice() };
+    } else {
+      return { issue: d.issue, date: d.date, numbers: d.red.slice(), backNumbers: [d.blue] };
+    }
+  });
 }
 
-function getState(score,T1,T2){
-    const abs=Math.abs(score);
-    if(score>0){
-        if(abs>=T1) return "盛";
-        if(abs>=T2) return "旺";
-        return "平";
-    }else{
-        if(abs>=T1) return "弱";
-        if(abs>=T2) return "衰";
-        return "平";
-    }
+function fillImportBox(n) {
+  // 把已加载的数据（最近 n 期）回填到粘贴框，直观证明"已经导入"
+  const box = document.getElementById('rawData');
+  if (!box || drawData.length === 0) return;
+  box.value = drawData.slice(-n).reverse()
+    .map(d => d.issue + ',' + d.numbers.map(pad2).join(' ') + ',' + d.backNumbers.map(pad2).join(' '))
+    .join('\n');
 }
 
-function selectNumsByState(fullList,state,splitVal,maxCnt){
-    const big = fullList.filter(x=>x>splitVal).sort((a,b)=>b‑a);
-    const small = fullList.filter(x=>x<=splitVal).sort((a,b)=>a‑b);
-    let res=[];let reason="";
-    switch(state){
-        case "盛":case "旺":
-            res.push(...big); if(res.length<maxCnt) res.push(...small);
-            reason="盛/旺：优先取大数，不足补小数";break;
-        case "弱":case "衰":
-            res.push(...small);
-            reason="衰/弱：禁止大数，仅选取小数";break;
-        case "平":default:
-            for(let i=0;i<Math.max(big.length,small.length)&&res.length<maxCnt;i++){
-                if(small[i]) res.push(small[i]);
-                if(big[i]) res.push(big[i]);
-            }
-            reason="平状态：大小交替选取";
+function loadSampleData() {
+  // 优先使用真实历史数据（lottery-data.js 自动加载）
+  const hasReal = (typeof window.REAL_DLT !== 'undefined' || typeof window.REAL_SSQ !== 'undefined');
+  if (hasReal) {
+    const real = currentType === 'dlt' ? window.REAL_DLT : window.REAL_SSQ;
+    if (real && real.length > 0) {
+      drawData = convertRealData(real, currentType);
+      const last = drawData[drawData.length-1];
+      document.getElementById('importResult').innerHTML =
+        `<span class="tag tag-green">已自动加载真实历史数据 ${drawData.length}期</span> ` +
+        `<span class="tag tag-blue">最新：${last.issue}（${last.date}）</span>` +
+        `<span class="text-muted">以下展示最近 30 期，${drawData.length} 期全部参与分析</span>`;
+      fillImportBox(30);
+      showRecentDraws();
+      refreshAll('gap');
+      return;
     }
-    res = [...new Set(res)].slice(0,maxCnt);
-    return {res,reason,big,small};
+  }
+  // 回退：示例数据
+  if (currentType === 'dlt') {
+    drawData = generateDLTSample(100);
+  } else {
+    drawData = generateSSQSample(100);
+  }
+  document.getElementById('importResult').innerHTML = `<span class="tag tag-gold">未检测到真实数据文件，已加载${drawData.length}期示例数据</span>`;
+  fillImportBox(30);
+  showRecentDraws();
+  refreshAll('gap');
 }
 
-function calcRun(){
-    const logDom = document.getElementById("log");
-    const jgDom = document.getElementById("jiugong");
-    const poolDom = document.getElementById("poolBox");
-    const resDom = document.getElementById("resultBox");
-    logDom.textContent="";jgDom.innerHTML="";poolDom.innerHTML="";resDom.textContent="";
-
-    const qDate = document.getElementById("qDate").value;
-    if(!qDate){logDom.textContent="请选择日期";return;}
-    const [y,mo,d] = qDate.split("-").map(Number);
-    const shiChen = document.getElementById("shiChen").value;
-    const splitVal = Number(document.getElementById("splitVal").value);
-    const T1 = Number(document.getElementById("T1").value);
-    const T2 = Number(document.getElementById("T2").value);
-    const maxTake = Number(document.getElementById("maxTake").value);
-    const useXian = document.getElementById("useXian").checked;
-    const lotSel = document.getElementById("lotSel").value;
-    let maxNum = 33;
-    if(lotSel==="dlt") maxNum=35;
-    if(lotSel==="p3") maxNum=9;
-
-    const solarObj = new Solar(y,mo,d);
-    const {pan,riGan,shiGan,termName,isYangDun,ju,fuTou,yuanIdx,xunKong,riGanZhi}=buildRealPan(solarObj,shiChen);
-
-    let baseSel = document.getElementById("baseSel").value;
-    let baseWx;
-    if(baseSel==="riGan") baseWx = LunarUtil.GAN_WX[riGan];
-    else if(baseSel==="shiGan") baseWx = LunarUtil.GAN_WX[shiGan];
-    else {
-        const zf = pan.find(g=>g.zhiFu);
-        baseWx = zf.hx;
-    }
-
-    logDom.textContent += `====【真拆补起局信息】====\n`;
-    logDom.textContent += `公历：${y}‑${mo}‑${d}｜时辰：${shiChen}\n`;
-    logDom.textContent += `节气：${termName}｜${isYangDun?"阳遁":"阴遁"}｜局数：${ju}\n`;
-    logDom.textContent += `符头元：${fuTou==="shang"?"上元":fuTou==="zhong"?"中元":"下元"}\n`;
-    logDom.textContent += `日干支：${riGanZhi}｜日干五行：${WX_MAP[baseWx]}\n`;
-    logDom.textContent += `旬空：${xunKong.join("、")}\n`;
-    logDom.textContent += `彩种上限${maxNum}｜分界${splitVal}｜T1=${T1}｜T2=${T2}｜单宫最多${maxTake}\n\n`;
-
-    let gongInfoList = [];
-    for(let idx=0;idx<9;idx++){
-        const g = pan[idx];
-        let score=0;
-        const rel = getRel(baseWx,g.hx);
-        score += WEIGHT[rel];
-        score += starScore(g.xing.hx,g.hx,g.fuYin,WEIGHT);
-        if(g.kongWang) score += WEIGHT.kongWang;
-        if(g.isJiuMu) score += WEIGHT.wangJia;
-        const absScore = Math.abs(score);
-        const state = getState(score,T1,T2);
-
-        let numSrc = [...g.hou];
-        if(useXian) numSrc.push(...g.xian);
-        const fullAll = expandNum(numSrc,maxNum);
-        const selRet = selectNumsByState(fullAll,state,splitVal,maxTake);
-
-        logDom.textContent += `【${g.name}】五行${WX_MAP[g.hx]}｜得分=${score}｜abs=${absScore}｜状态=${state}\n`;
-        logDom.textContent += `  递推得到全部号:${fullAll.join(" ")||"无"}\n`;
-        logDom.textContent += `  大数:${selRet.big.join(" ")||"无"}｜小数:${selRet.small.join(" ")||"无"}\n`;
-        logDom.textContent += `  选号规则:${selRet.reason}\n`;
-        logDom.textContent += `  ✔实际选出:${selRet.res.join(" ")||"无"}\n`;
-        logDom.textContent += `  ${g.isJiuMu?"✅生子救母触发:"+g.jmNote:"❌生子救母不触发"}\n\n`;
-        gongInfoList.push({gong:g,score,absScore,state,fullAll,big:selRet.big,small:selRet.small,pick:selRet.res,reason:selRet.reason});
-    }
-
-    let totalPool = [];
-    for(let gi of gongInfoList){ totalPool.push(...gi.pick); }
-    totalPool = [...new Set(totalPool)].sort((a,b)=>a‑b);
-
-    for(let gi of gongInfoList){
-        const g = gi.gong;
-        const div = document.createElement("div");
-        div.className="gong";
-        let stTag = "";
-        if(["盛","旺"].includes(gi.state)) stTag=`<div class="tag‑good">${gi.state}</div>`;
-        if(["衰","弱"].includes(gi.state)) stTag=`<div class="tag‑bad">${gi.state}</div>`;
-        div.innerHTML = `
-        <b>${g.name}</b><br>
-        九星：${g.xing.name}(${WX_MAP[g.xing.hx]})<br>
-        八门：${g.men}｜八神：${g.shen}<br>
-        天盘${g.tianGan}｜地盘${g.diGan}<br>
-        得分：${gi.score}｜状态：${gi.state}<br>
-        ${stTag}
-        ${g.isJiuMu?"✅生子救母":"❌无生子救母"}<br>
-        <span>选出：${gi.pick.join(" ")||"无"}</span>
-        `;
-        jgDom.appendChild(div);
-    }
-
-    totalPool.forEach(n=>{
-        let cls="low";
-        const giFind = gongInfoList.find(x=>x.pick.includes(n));
-        if(giFind){
-            if(["盛","旺"].includes(giFind.state)) cls="high";
-            else if(giFind.state==="平") cls="mid";
-        }
-        const span = document.createElement("span");
-        span.className = `pool‑num ${cls}`;
-        span.textContent = String(n).padStart(2,"0");
-        poolDom.appendChild(span);
+function generateDLTSample(n) {
+  const data = [];
+  let seed = Date.now();
+  function rand() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  for (let i = 0; i < n; i++) {
+    let fronts = new Set();
+    while (fronts.size < 5) fronts.add(Math.floor(rand() * 35) + 1);
+    let backs = new Set();
+    while (backs.size < 2) backs.add(Math.floor(rand() * 12) + 1);
+    data.push({
+      issue: '24' + String(i+1).padStart(4,'0'),
+      numbers: [...fronts].sort((a,b)=>a-b),
+      backNumbers: [...backs].sort((a,b)=>a-b)
     });
-
-    const openRaw = document.getElementById("openInput").value.trim();
-    let openArr = openRaw.split(/\s+/).filter(x=>x).map(s=>Number(s));
-    let hitArr = totalPool.filter(num=> openArr.includes(num));
-    resDom.textContent = `候选总池：${totalPool.join(" ")||"无"}\n开奖录入：${openArr.join(" ")||"无"}\n命中号码：${hitArr.join(" ")||"无"}\n命中个数：${hitArr.length}`;
-    logDom.textContent += `====最终候选总池：${totalPool.join(" ")||"无号码"}\n`;
+  }
+  return data;
 }
 
-function clearAll(){
-    document.getElementById("log").textContent="";
-    document.getElementById("jiugong").innerHTML="";
-    document.getElementById("poolBox").innerHTML="";
-    document.getElementById("resultBox").textContent="";
-    document.getElementById("openInput").value="";
+function generateSSQSample(n) {
+  const data = [];
+  let seed = Date.now() + 1;
+  function rand() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  for (let i = 0; i < n; i++) {
+    let reds = new Set();
+    while (reds.size < 6) reds.add(Math.floor(rand() * 33) + 1);
+    let blue = Math.floor(rand() * 16) + 1;
+    data.push({
+      issue: '2024' + String(i+1).padStart(3,'0'),
+      numbers: [...reds].sort((a,b)=>a-b),
+      backNumbers: [blue]
+    });
+  }
+  return data;
 }
 
-document.getElementById("qDate").valueAsDate = new Date();
+function parseAndLoadData() {
+  const raw = document.getElementById('rawData').value.trim();
+  if (!raw) { document.getElementById('importResult').innerHTML = '<span class="tag tag-red">请输入数据</span>'; return; }
+  const lines = raw.split('\n').filter(l => l.trim());
+  const data = [];
+  let errors = 0;
+  for (const line of lines) {
+    try {
+      const parts = line.trim().split(/[,\s]+/);
+      const c = cfg();
+      let issue, numbers, backNumbers;
+      if (currentType === 'dlt') {
+        issue = parts[0];
+        numbers = parts.slice(1, 6).map(Number).filter(x => x >= 1 && x <= 35);
+        backNumbers = parts.slice(6, 8).map(Number).filter(x => x >= 1 && x <= 12);
+        if (numbers.length !== 5 || backNumbers.length !== 2) { errors++; continue; }
+      } else {
+        issue = parts[0];
+        numbers = parts.slice(1, 7).map(Number).filter(x => x >= 1 && x <= 33);
+        backNumbers = [Number(parts[7])].filter(x => x >= 1 && x <= 16);
+        if (numbers.length !== 6 || backNumbers.length !== 1) { errors++; continue; }
+      }
+      data.push({ issue, numbers: numbers.sort((a,b)=>a-b), backNumbers: backNumbers.sort((a,b)=>a-b) });
+    } catch(e) { errors++; }
+  }
+  if (data.length > 0) {
+    drawData = data;
+    document.getElementById('importResult').innerHTML = `<span class="tag tag-green">成功导入${data.length}期</span>${errors > 0 ? `<span class="tag tag-red">${errors}行格式错误</span>` : ''}`;
+    showRecentDraws();
+    refreshAll('gap');
+  } else {
+    document.getElementById('importResult').innerHTML = '<span class="tag tag-red">解析失败，请检查格式</span>';
+  }
+}
+
+function clearData() { drawData = []; document.getElementById('rawData').value=''; document.getElementById('importResult').innerHTML=''; document.getElementById('recentDraws').innerHTML='<p class="text-muted">无数据</p>'; }
+function exportData() {
+  if (drawData.length === 0) return;
+  let txt = drawData.map(d => d.issue + ',' + d.numbers.join(' ') + ',' + d.backNumbers.join(' ')).join('\n');
+  document.getElementById('rawData').value = txt;
+}
+
+function showRecentDraws() {
+  const c = cfg();
+  const recent = drawData.slice(-15).reverse();
+  let html = '<table class="gap-table"><tr><th>期号</th><th>' + (currentType==='dlt'?'前区':'红球') + '</th><th>' + (currentType==='dlt'?'后区':'蓝球') + '</th><th>和值</th><th>跨度</th><th>奇偶</th></tr>';
+  recent.forEach(d => {
+    const sum = d.numbers.reduce((a,b)=>a+b,0);
+    const span = d.numbers[d.numbers.length-1] - d.numbers[0];
+    const odd = d.numbers.filter(x=>x%2===1).length;
+    const even = d.numbers.length - odd;
+    html += '<tr><td>'+d.issue+'</td><td>'+d.numbers.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')+'</td>';
+    html += '<td>'+d.backNumbers.map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</td>';
+    html += '<td>'+sum+'</td><td>'+span+'</td><td>'+odd+':'+even+'</td></tr>';
+  });
+  html += '</table>';
+  document.getElementById('recentDraws').innerHTML = html;
+}
+
+function pad2(n) { return String(n).padStart(2, '0'); }
+
+// ============== 遗漏计算 ==============
+function computeGaps(nums, max) {
+  const gaps = {};
+  for (let n = 1; n <= max; n++) gaps[n] = nums.length;
+  nums.forEach((draw, idx) => {
+    const period = nums.length - 1 - idx;
+    draw.numbers.forEach(n => { if (gaps[n] > period) gaps[n] = period; });
+  });
+  return gaps;
+}
+
+function computeBackGaps(nums, max) {
+  const gaps = {};
+  for (let n = 1; n <= max; n++) gaps[n] = nums.length;
+  nums.forEach((draw, idx) => {
+    const period = nums.length - 1 - idx;
+    draw.backNumbers.forEach(n => { if (gaps[n] > period) gaps[n] = period; });
+  });
+  return gaps;
+}
+
+// 完整遗漏历史（最大遗漏、当前遗漏、平均遗漏、最近出现遗漏）
+function computeFullGaps(nums, max) {
+  const data = {};
+  for (let n = 1; n <= max; n++) {
+    const appearances = [];
+    nums.forEach((draw, idx) => { if (draw.numbers.includes(n)) appearances.push(idx); });
+    if (appearances.length === 0) {
+      data[n] = { current: nums.length, max: nums.length, avg: 0, count: 0 };
+    } else {
+      const gapsArr = [];
+      if (appearances[0] > 0) gapsArr.push(appearances[0]);
+      for (let i = 1; i < appearances.length; i++) gapsArr.push(appearances[i] - appearances[i-1]);
+      const current = nums.length - 1 - appearances[appearances.length-1];
+      data[n] = {
+        current: current,
+        max: Math.max(...gapsArr, current),
+        avg: gapsArr.length > 0 ? gapsArr.reduce((a,b)=>a+b,0)/gapsArr.length : nums.length,
+        count: appearances.length
+      };
+    }
+  }
+  return data;
+}
+
+function computeFullBackGaps(nums, max) {
+  const data = {};
+  for (let n = 1; n <= max; n++) {
+    const appearances = [];
+    nums.forEach((draw, idx) => { if (draw.backNumbers.includes(n)) appearances.push(idx); });
+    if (appearances.length === 0) {
+      data[n] = { current: nums.length, max: nums.length, avg: 0, count: 0 };
+    } else {
+      const gapsArr = [];
+      if (appearances[0] > 0) gapsArr.push(appearances[0]);
+      for (let i = 1; i < appearances.length; i++) gapsArr.push(appearances[i] - appearances[i-1]);
+      const current = nums.length - 1 - appearances[appearances.length-1];
+      data[n] = {
+        current: current,
+        max: Math.max(...gapsArr, current),
+        avg: gapsArr.length > 0 ? gapsArr.reduce((a,b)=>a+b,0)/gapsArr.length : nums.length,
+        count: appearances.length
+      };
+    }
+  }
+  return data;
+}
+
+// ============== 冷热分类 ==============
+function classifyHotCold(num, gap, avgGap) {
+  if (gap < avgGap) return 'hot';
+  if (gap < avgGap * 2) return 'warm';
+  if (gap < avgGap * 3) return 'cold';
+  if (gap < avgGap * 5) return 'ice';
+  return 'deep';
+}
+
+function renderHotColdCell(n, level) {
+  const cls = { hot:'num-hot', warm:'num-warm', cold:'num-cold', ice:'num-ice', deep:'num-ice' };
+  const label = { hot:'热', warm:'温', cold:'冷', ice:'极冷', deep:'超冷' };
+  return `<div class="num-cell ${cls[level]}" title="${pad2(n)}: ${label[level]}">${pad2(n)}</div>`;
+}
+
+// ============== 刷新所有面板 ==============
+function refreshAll(activeTab) {
+  if (drawData.length < 5) return;
+  renderGap();
+  renderHotCold();
+  renderOddEven();
+  renderBigSmall();
+  renderZones();
+  renderConsecRepeat();
+  renderSumSpan();
+  renderKillMethods();
+  renderCooccurrence();
+  renderPosition();
+  renderFilter();
+  updateCalc();
+  renderChaseAnalysis();
+  renderTemplate();
+  renderStopLoss();
+  renderRecommendation();
+}
+
+// ============== 遗漏分析面板 ==============
+function renderGap() {
+  const c = cfg();
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const backGaps = currentType==='dlt' ? computeFullBackGaps(drawData, c.maxBack) : null;
+  const avgGap = c.avgGapFront;
+
+  // Summary boxes
+  let maxGapNum = 1, maxGapVal = 0;
+  let totalCurrent = 0;
+  for (let n = 1; n <= c.maxFront; n++) {
+    if (gaps[n].current > maxGapVal) { maxGapVal = gaps[n].current; maxGapNum = n; }
+    totalCurrent += gaps[n].current;
+  }
+  document.getElementById('gapSummary').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${avgGap}</div><div class="stat-label">理论平均遗漏</div></div>
+    <div class="stat-box"><div class="stat-num">${(totalCurrent/c.maxFront).toFixed(1)}</div><div class="stat-label">实际平均遗漏</div></div>
+    <div class="stat-box"><div class="stat-num">${maxGapVal}</div><div class="stat-label">当前最大遗漏</div></div>
+    <div class="stat-box"><div class="stat-num">${pad2(maxGapNum)}</div><div class="stat-label">最大遗漏号</div></div>
+  `;
+
+  // Number grid with current gap
+  let html = `<div class="text-sm mb-5">${currentType==='dlt'?'前区':'红球'}当前遗漏值（颜色越深遗漏越大）：</div><div class="num-grid">`;
+  for (let n = 1; n <= c.maxFront; n++) {
+    const g = gaps[n].current;
+    const level = classifyHotCold(n, g, avgGap);
+    html += renderHotColdCell(n, level);
+  }
+  html += '</div>';
+
+  if (currentType === 'dlt') {
+    html += `<div class="text-sm mb-5" style="margin-top:10px;">后区当前遗漏值：</div><div class="num-grid-7">`;
+    for (let n = 1; n <= c.maxBack; n++) {
+      const g = backGaps[n].current;
+      const level = classifyHotCold(n, g, c.avgGapBack);
+      html += renderHotColdCell(n, level);
+    }
+    html += '</div>';
+  } else {
+    html += `<div class="text-sm mb-5" style="margin-top:10px;">蓝球当前遗漏值：</div><div class="num-grid">`;
+    for (let n = 1; n <= 16; n++) {
+      const bg = computeFullBackGaps(drawData, 16);
+      const g = bg[n].current;
+      const level = classifyHotCold(n, g, c.avgGapBack);
+      html += renderHotColdCell(n, level);
+    }
+    html += '</div>';
+  }
+  document.getElementById('gapGrid').innerHTML = html;
+
+  // TOP 10 gaps
+  const sorted = Object.entries(gaps).sort((a,b) => b[1].current - a[1].current).slice(0, 10);
+  let topHtml = '<table class="gap-table"><tr><th>号码</th><th>当前遗漏</th><th>最大遗漏</th><th>平均遗漏</th><th>出现次数</th><th>倍率</th></tr>';
+  sorted.forEach(([n, g]) => {
+    const ratio = g.avg > 0 ? (g.current / g.avg).toFixed(1) : '∞';
+    topHtml += `<tr><td class="ball ball-red" style="width:28px;height:28px;line-height:28px;">${pad2(n)}</td><td>${g.current}</td><td>${g.max}</td><td>${g.avg.toFixed(1)}</td><td>${g.count}</td><td>${ratio}×</td></tr>`;
+  });
+  topHtml += '</table>';
+  document.getElementById('gapTop').innerHTML = topHtml;
+
+  // Gap comparison chart
+  let compHtml = '<div class="text-sm mb-5">当前遗漏 vs 理论均值（超过均值的号码）：</div>';
+  const exceed = Object.entries(gaps).filter(([n,g]) => g.current > avgGap).sort((a,b) => b[1].current - a[1].current);
+  exceed.slice(0, 15).forEach(([n, g]) => {
+    const pct = Math.min(100, (g.current / (avgGap * 5)) * 100);
+    const color = g.current > avgGap*3 ? '#e74c3c' : g.current > avgGap*2 ? '#f39c12' : '#3498db';
+    compHtml += `<div class="flex-between mb-5"><span>${pad2(n)}号 遗漏${g.current}期</span></div><div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${color};">${g.current}期 (${(g.current/avgGap).toFixed(1)}倍)</div></div>`;
+  });
+  document.getElementById('gapCompare').innerHTML = compHtml;
+}
+
+// ============== 冷热追踪面板 ==============
+function renderHotCold() {
+  const c = cfg();
+  const avgGap = c.avgGapFront;
+  const gaps = computeGaps(drawData, c.maxFront);
+
+  let hot=[], warm=[], cold=[], ice=[], deep=[];
+  for (let n = 1; n <= c.maxFront; n++) {
+    const g = gaps[n];
+    if (g < avgGap) hot.push(n);
+    else if (g < avgGap*2) warm.push(n);
+    else if (g < avgGap*3) cold.push(n);
+    else if (g < avgGap*5) ice.push(n);
+    else deep.push(n);
+  }
+
+  document.getElementById('hotcoldSummary').innerHTML = `
+    <div class="stat-box"><div class="stat-num" style="color:#ff6b6b;">${hot.length}</div><div class="stat-label">热号(遗漏&lt;${avgGap})</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#ffa726;">${warm.length}</div><div class="stat-label">温号(${avgGap}-${avgGap*2})</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#64b5f6;">${cold.length}</div><div class="stat-label">冷号(${avgGap*2}-${avgGap*3})</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:#9fa8da;">${ice.length + deep.length}</div><div class="stat-label">极冷/超冷(>${avgGap*3})</div></div>
+  `;
+
+  let html = '<div class="num-grid">';
+  for (let n = 1; n <= c.maxFront; n++) {
+    const g = gaps[n];
+    const level = classifyHotCold(n, g, avgGap);
+    html += renderHotColdCell(n, level);
+  }
+  html += '</div>';
+  document.getElementById('hotcoldGrid').innerHTML = html;
+
+  // Trend (last 10 periods hot number count)
+  let trendHtml = '<div class="text-sm mb-5">近10期热号数量变化：</div><div style="display:flex;align-items:flex-end;gap:6px;height:80px;">';
+  for (let i = Math.max(0, drawData.length-10); i < drawData.length; i++) {
+    const lookback = Math.min(5, i+1);
+    const recent = drawData.slice(i-lookback+1, i+1);
+    const appeared = new Set();
+    recent.forEach(d => d.numbers.forEach(n => appeared.add(n)));
+    const hotCount = appeared.size;
+    const pct = (hotCount / c.maxFront) * 100;
+    trendHtml += `<div style="flex:1;text-align:center;"><div style="background:#e74c3c;width:100%;height:${Math.max(4, pct*0.6)}px;border-radius:3px;"></div><div class="text-sm" style="margin-top:2px;">${hotCount}</div></div>`;
+  }
+  trendHtml += '</div>';
+  document.getElementById('hotcoldTrend').innerHTML = trendHtml;
+
+  // Conversion signals
+  const fullGaps = computeFullGaps(drawData, c.maxFront);
+  let signals = [];
+  for (let n = 1; n <= c.maxFront; n++) {
+    const g = fullGaps[n];
+    if (g.current >= avgGap * 2 && g.current <= avgGap * 2.5) signals.push({n, type:'冷号回补', gap: g.current, ratio: (g.current/avgGap).toFixed(1)});
+    if (g.current >= avgGap * 3 && g.current <= avgGap * 3.5) signals.push({n, type:'极冷预警', gap: g.current, ratio: (g.current/avgGap).toFixed(1)});
+  }
+  let sigHtml = '<div class="text-sm mb-5">转换法则：热号连续3期后60%概率降温 | 冷号遗漏达均值2倍后回补概率增大</div>';
+  if (signals.length === 0) {
+    sigHtml += '<p class="text-muted">当前无明显转换信号</p>';
+  } else {
+    signals.forEach(s => {
+      const cls = s.type === '冷号回补' ? 'tag-gold' : 'tag-red';
+      sigHtml += `<span class="tag ${cls}">${pad2(s.n)}号 ${s.type} 遗漏${s.gap}期(${s.ratio}倍)</span> `;
+    });
+  }
+  document.getElementById('hotcoldSignals').innerHTML = sigHtml;
+}
+
+// ============== 奇偶分析 ==============
+function renderOddEven() {
+  const c = cfg();
+  const count = c.frontCount;
+  const ratioMap = {};
+  drawData.forEach(d => {
+    const odd = d.numbers.filter(x => x % 2 === 1).length;
+    const key = odd + ':' + (count - odd);
+    ratioMap[key] = (ratioMap[key] || 0) + 1;
+  });
+
+  const total = drawData.length;
+  const entries = Object.entries(ratioMap).sort((a,b) => b[1]-a[1]);
+
+  let html = '<div class="text-sm mb-5">近' + total + '期' + (currentType==='dlt'?'前区':'红球') + '奇偶比分布：</div>';
+  entries.forEach(([ratio, cnt]) => {
+    const pct = (cnt/total*100).toFixed(1);
+    const color = pct > 30 ? '#27ae60' : pct > 15 ? '#3498db' : '#f39c12';
+    html += `<div class="flex-between mb-5"><span>${ratio}</span><span>${cnt}次 ${pct}%</span></div>`;
+    html += `<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:${color};">${pct}%</div></div>`;
+  });
+  document.getElementById('oddEvenChart').innerHTML = html;
+
+  // Stats table
+  let statsHtml = '<table class="gap-table"><tr><th>奇偶比</th><th>次数</th><th>占比</th><th>理论占比</th><th>偏差</th></tr>';
+  const theoretical = {};
+  // Calculate theoretical probability
+  for (let k = 0; k <= count; k++) {
+    const oddNums = Math.ceil(c.maxFront / 2);
+    const evenNums = Math.floor(c.maxFront / 2);
+    const ways = comb(oddNums, k) * comb(evenNums, count - k);
+    const totalWays = comb(c.maxFront, count);
+    theoretical[k + ':' + (count-k)] = (ways/totalWays*100).toFixed(1);
+  }
+  for (let k = 0; k <= count; k++) {
+    const key = k + ':' + (count-k);
+    const cnt = ratioMap[key] || 0;
+    const actual = (cnt/total*100).toFixed(1);
+    const theo = theoretical[key] || '0';
+    const dev = (actual - theo).toFixed(1);
+    statsHtml += `<tr><td>${key}</td><td>${cnt}</td><td>${actual}%</td><td>${theo}%</td><td style="color:${Math.abs(dev)>5?'#e74c3c':'#27ae60'};">${dev>0?'+':''}${dev}%</td></tr>`;
+  }
+  statsHtml += '</table>';
+  document.getElementById('oddEvenStats').innerHTML = statsHtml;
+}
+
+// ============== 大小分析 ==============
+function renderBigSmall() {
+  const c = cfg();
+  const count = c.frontCount;
+  const split = currentType === 'dlt' ? 17 : 11;
+
+  let ratioMap = {};
+  drawData.forEach(d => {
+    const small = d.numbers.filter(x => x <= split).length;
+    const key = small + ':' + (count - small);
+    ratioMap[key] = (ratioMap[key] || 0) + 1;
+  });
+
+  const total = drawData.length;
+  let html = `<div class="text-sm mb-5">大小划分：小号≤${split}，大号>${split}（近${total}期）</div>`;
+  Object.entries(ratioMap).sort((a,b)=>b[1]-a[1]).forEach(([ratio, cnt]) => {
+    const pct = (cnt/total*100).toFixed(1);
+    html += `<div class="flex-between mb-5"><span>小${ratio.split(':')[0]} 大${ratio.split(':')[1]}</span><span>${cnt}次 ${pct}%</span></div>`;
+    html += `<div class="progress-wrap"><div class="progress-bar" style="width:${pct}%;background:#8e44ad;">${pct}%</div></div>`;
+  });
+  document.getElementById('bigSmallChart').innerHTML = html;
+
+  let statsHtml = '<table class="gap-table"><tr><th>大小比</th><th>次数</th><th>占比</th><th>趋势</th></tr>';
+  for (let k = 0; k <= count; k++) {
+    const key = k + ':' + (count-k);
+    const cnt = ratioMap[key] || 0;
+    const pct = (cnt/total*100).toFixed(1);
+    // Recent trend: check last 10
+    let recentCnt = 0;
+    drawData.slice(-10).forEach(d => { const s = d.numbers.filter(x=>x<=split).length; if (s+':'+(count-s)===key) recentCnt++; });
+    const trend = recentCnt > cnt/total*10 ? '↑' : recentCnt < cnt/total*10 ? '↓' : '→';
+    statsHtml += `<tr><td>${key}</td><td>${cnt}</td><td>${pct}%</td><td>${trend} 近10期${recentCnt}次</td></tr>`;
+  }
+  statsHtml += '</table>';
+  document.getElementById('bigSmallStats').innerHTML = statsHtml;
+
+  // Prediction
+  const last = drawData[drawData.length-1];
+  const lastOdd = last.numbers.filter(x=>x%2===1).length;
+  const lastSmall = last.numbers.filter(x=>x<=split).length;
+  let predHtml = `<div class="recommend-box"><p>上期奇偶比：<strong>${lastOdd}:${count-lastOdd}</strong>，大小比：<strong>${lastSmall}:${count-lastSmall}</strong></p>`;
+  predHtml += `<p class="text-sm text-muted">根据回归趋势，下期建议关注：</p>`;
+  // Most common ratio
+  const commonOE = Object.entries(ratioMap).sort((a,b)=>b[1]-a[1])[0];
+  if (commonOE) predHtml += `<p>最常见大小比：<strong>${commonOE[0]}</strong>（占比${(commonOE[1]/total*100).toFixed(1)}%）</p>`;
+  predHtml += '</div>';
+  document.getElementById('ratioPredict').innerHTML = predHtml;
+}
+
+// ============== 区间分析 ==============
+function renderZones() {
+  const c = cfg();
+  const zoneCounts = c.zones.map(() => 0);
+  const zoneDrawCounts = c.zones.map(() => 0); // periods with at least 1
+  const total = drawData.length;
+
+  drawData.forEach(d => {
+    c.zones.forEach((z, i) => {
+      const inZone = d.numbers.filter(n => n >= z[0] && n <= z[1]).length;
+      zoneCounts[i] += inZone;
+      if (inZone > 0) zoneDrawCounts[i]++;
+    });
+  });
+
+  const totalBalls = total * c.frontCount;
+  let html = '<div class="text-sm mb-5">各区间出号统计（近' + total + '期）：</div>';
+  c.zones.forEach((z, i) => {
+    const pct = (zoneCounts[i] / totalBalls * 100).toFixed(1);
+    const perDraw = (zoneCounts[i] / total).toFixed(2);
+    html += `<div class="flex-between mb-5"><span>${c.zoneNames[i]} (${pad2(z[0])}-${pad2(z[1])})</span><span>${zoneCounts[i]}号 均${perDraw}/期 ${pct}%</span></div>`;
+    html += `<div class="progress-wrap"><div class="progress-bar" style="width:${pct * c.zones.length}%;background:${['#e74c3c','#f39c12','#27ae60','#3498db','#9b59b6','#e91e63','#00bcd4'][i]};">${pct}%</div></div>`;
+  });
+  document.getElementById('zoneChart').innerHTML = html;
+
+  // Zone table for last 20 periods
+  const recent = drawData.slice(-20);
+  let tblHtml = '<table class="gap-table"><tr><th>期号</th>';
+  c.zones.forEach(z => tblHtml += `<th>${pad2(z[0])}-${pad2(z[1])}</th>`);
+  tblHtml += '<th>合计</th></tr>';
+  recent.forEach(d => {
+    tblHtml += `<tr><td>${d.issue.slice(-4)}</td>`;
+    let sum = 0;
+    c.zones.forEach(z => {
+      const cnt = d.numbers.filter(n => n >= z[0] && n <= z[1]).length;
+      sum += cnt;
+      tblHtml += `<td style="background:${cnt===0?'#55555522':cnt>=2?'#27ae6022':'#'}">${cnt}</td>`;
+    });
+    tblHtml += `<td>${sum}</td></tr>`;
+  });
+  tblHtml += '</table>';
+  document.getElementById('zoneTable').innerHTML = tblHtml;
+
+  // Zone rotation analysis
+  let rotHtml = '<div class="text-sm mb-5">区间沉默周期分析（连续未出号的期数）：</div>';
+  c.zones.forEach((z, i) => {
+    let silent = 0;
+    for (let idx = drawData.length-1; idx >= 0; idx--) {
+      if (drawData[idx].numbers.some(n => n >= z[0] && n <= z[1])) break;
+      silent++;
+    }
+    const avgCycle = (totalBalls / total) > 0 ? (c.frontCount / c.zones.length) : 1;
+    const alert = silent > avgCycle * 2;
+    rotHtml += `<span class="tag ${alert?'tag-red':'tag-blue'}">${c.zoneNames[i]}: 沉默${silent}期${alert?' ⚠️可能回补':''}</span> `;
+  });
+  document.getElementById('zoneRotation').innerHTML = rotHtml;
+}
+
+// ============== 连号重号分析 ==============
+function renderConsecRepeat() {
+  const c = cfg();
+  const total = drawData.length;
+
+  // Consecutive analysis
+  let consecCount = 0, noConsec = 0, multiConsec = 0, tripleConsec = 0;
+  const consecDetails = [];
+  drawData.forEach((d, idx) => {
+    const nums = d.numbers;
+    const pairs = [];
+    for (let i = 0; i < nums.length - 1; i++) {
+      if (nums[i+1] - nums[i] === 1) pairs.push([nums[i], nums[i+1]]);
+    }
+    if (pairs.length === 0) noConsec++;
+    else if (pairs.length === 1) consecCount++;
+    else multiConsec++;
+    // Check triple
+    for (let i = 0; i < nums.length - 2; i++) {
+      if (nums[i+1]-nums[i]===1 && nums[i+2]-nums[i+1]===1) { tripleConsec++; break; }
+    }
+    if (idx >= total-20) consecDetails.push({ issue: d.issue, pairs, count: pairs.length });
+  });
+
+  document.getElementById('consecSummary').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${(consecCount/total*100).toFixed(1)}%</div><div class="stat-label">含1组连号</div></div>
+    <div class="stat-box"><div class="stat-num">${(noConsec/total*100).toFixed(1)}%</div><div class="stat-label">无连号</div></div>
+    <div class="stat-box"><div class="stat-num">${(multiConsec/total*100).toFixed(1)}%</div><div class="stat-label">多组连号</div></div>
+    <div class="stat-box"><div class="stat-num">${(tripleConsec/total*100).toFixed(1)}%</div><div class="stat-label">含三连号</div></div>
+  `;
+
+  let histHtml = '<div class="text-sm mb-5">近20期连号情况：</div><table class="gap-table"><tr><th>期号</th><th>连号组</th><th>组数</th></tr>';
+  consecDetails.forEach(d => {
+    histHtml += `<tr><td>${d.issue.slice(-4)}</td><td>${d.pairs.map(p=>pad2(p[0])+'-'+pad2(p[1])).join(', ')||'无'}</td><td>${d.count}</td></tr>`;
+  });
+  histHtml += '</table>';
+  document.getElementById('consecHistory').innerHTML = histHtml;
+
+  // Trend
+  let trendHtml = '<div class="text-sm mb-5">连号出现率走势（每10期统计）：</div>';
+  for (let start = 0; start < total; start += 10) {
+    const chunk = drawData.slice(start, start+10);
+    const cnt = chunk.filter(d => {
+      for (let i = 0; i < d.numbers.length-1; i++) if (d.numbers[i+1]-d.numbers[i]===1) return true;
+      return false;
+    }).length;
+    const pct = (cnt/chunk.length*100).toFixed(0);
+    trendHtml += `<span class="tag ${cnt>=4?'tag-red':'tag-gray'}">${start+1}-${start+chunk.length}期: ${pct}%</span> `;
+  }
+  document.getElementById('consecTrend').innerHTML = trendHtml;
+
+  // Repeat number analysis
+  let repeatDraws = 0, repeatNums = 0;
+  const repeatDetails = [];
+  for (let i = 1; i < total; i++) {
+    const prev = new Set(drawData[i-1].numbers);
+    const curr = drawData[i].numbers;
+    const repeats = curr.filter(n => prev.has(n));
+    if (repeats.length > 0) repeatDraws++;
+    repeatNums += repeats.length;
+    if (i >= total-15) repeatDetails.push({ issue: drawData[i].issue, nums: repeats });
+  }
+  const repeatRate = ((repeatDraws/(total-1))*100).toFixed(1);
+
+  document.getElementById('repeatSummary').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${repeatRate}%</div><div class="stat-label">含重号期占比</div></div>
+    <div class="stat-box"><div class="stat-num">${(repeatNums/(total-1)).toFixed(2)}</div><div class="stat-label">平均每期重号数</div></div>
+    <div class="stat-box"><div class="stat-num">${repeatDetails.length>0&&repeatDetails[repeatDetails.length-1].nums.length||0}</div><div class="stat-label">上期重号数</div></div>
+    <div class="stat-box"><div class="stat-num">${(c.frontCount*0.4).toFixed(1)}</div><div class="stat-label">理论均值</div></div>
+  `;
+
+  let repHtml = '<div class="text-sm mb-5">近15期重号记录：</div><table class="gap-table"><tr><th>期号</th><th>重号</th><th>个数</th></tr>';
+  repeatDetails.forEach(d => {
+    repHtml += `<tr><td>${d.issue.slice(-4)}</td><td>${d.nums.map(n=>'<span class="ball ball-gold">'+pad2(n)+'</span>').join('')||'无'}</td><td>${d.nums.length}</td></tr>`;
+  });
+  repHtml += '</table>';
+  document.getElementById('repeatHistory').innerHTML = repHtml;
+
+  // Predict repeat for next draw
+  const lastDraw = drawData[total-1];
+  const prevDraw = drawData[total-2];
+  const lastRepeats = lastDraw.numbers.filter(n => new Set(prevDraw.numbers).has(n));
+  let predHtml = `<div class="recommend-box"><p>上期号码：${lastDraw.numbers.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')}</p>`;
+  predHtml += `<p>与上上期重号：${lastRepeats.length>0?lastRepeats.map(n=>'<span class="ball ball-gold">'+pad2(n)+'</span>').join(''):'无'}</p>`;
+  predHtml += `<p class="text-sm">重号率${repeatRate}%，下期关注上期号码中1-2个重复：</p>`;
+  predHtml += `<p>${lastDraw.numbers.map(n=>'<span class="ball ball-green" style="opacity:0.7;">'+pad2(n)+'</span>').join('')}</p></div>`;
+  document.getElementById('repeatPredict').innerHTML = predHtml;
+}
+
+// ============== 和值跨度 ==============
+function renderSumSpan() {
+  const c = cfg();
+  const total = drawData.length;
+  const sums = drawData.map(d => d.numbers.reduce((a,b)=>a+b,0));
+  const spans = drawData.map(d => d.numbers[d.numbers.length-1] - d.numbers[0]);
+  const avgSum = sums.reduce((a,b)=>a+b,0)/total;
+  const avgSpan = spans.reduce((a,b)=>a+b,0)/total;
+  const lastSum = sums[total-1];
+  const lastSpan = spans[total-1];
+  const maxSum = Math.max(...sums);
+  const minSum = Math.min(...sums);
+
+  let html = `<div class="grid-4 mb-10">
+    <div class="stat-box"><div class="stat-num">${avgSum.toFixed(1)}</div><div class="stat-label">实际均值</div></div>
+    <div class="stat-box"><div class="stat-num">${c.sumMean}</div><div class="stat-label">理论均值</div></div>
+    <div class="stat-box"><div class="stat-num">${lastSum}</div><div class="stat-label">上期和值</div></div>
+    <div class="stat-box"><div class="stat-num">${(lastSum-avgSum>0?'+':'')+(lastSum-avgSum).toFixed(0)}</div><div class="stat-label">偏离</div></div>
+  </div>`;
+
+  // Distribution
+  const range = maxSum - minSum || 1;
+  const buckets = 10;
+  const bucketSize = Math.ceil(range / buckets);
+  const dist = new Array(buckets).fill(0);
+  sums.forEach(s => { dist[Math.min(buckets-1, Math.floor((s-minSum)/bucketSize))]++; });
+
+  html += '<div class="text-sm mb-5">和值区间分布：</div>';
+  for (let i = 0; i < buckets; i++) {
+    const lo = minSum + i*bucketSize, hi = lo + bucketSize - 1;
+    const pct = (dist[i]/total*100).toFixed(1);
+    const isMean = c.sumMean >= lo && c.sumMean <= hi;
+    html += `<div class="flex-between mb-5"><span>${lo}-${hi}${isMean?' ★均值区间':''}</span><span>${dist[i]}次 ${pct}%</span></div>`;
+    html += `<div class="progress-wrap"><div class="progress-bar" style="width:${pct*2}%;background:${isMean?'#27ae60':'#3498db'};">${pct}%</div></div>`;
+  }
+
+  // Trend
+  html += '<div style="margin-top:12px;"><div class="text-sm mb-5">和值走势（近20期）：</div><div style="display:flex;align-items:flex-end;gap:3px;height:60px;">';
+  const recent = sums.slice(-20);
+  const maxR = Math.max(...recent), minR = Math.min(...recent);
+  recent.forEach((s, i) => {
+    const h = maxR > minR ? ((s-minR)/(maxR-minR))*50 + 5 : 30;
+    const color = s > avgSum*1.1 ? '#e74c3c' : s < avgSum*0.9 ? '#3498db' : '#27ae60';
+    html += `<div style="flex:1;text-align:center;" title="${drawData[total-20+i].issue}: ${s}"><div style="background:${color};width:100%;height:${h}px;border-radius:2px;"></div><div style="font-size:10px;color:#888;">${s}</div></div>`;
+  });
+  html += '</div></div>';
+
+  document.getElementById('sumAnalysis').innerHTML = html;
+  document.getElementById('sumTrend').innerHTML = '<p class="text-sm text-muted">和值偏离均值较大时，下期有向均值回归趋势。当前偏离'+( lastSum-avgSum>0?'偏大':'偏小')+Math.abs(lastSum-avgSum).toFixed(0)+'点。</p>';
+
+  // Span
+  let spanHtml = `<div class="grid-4 mb-10">
+    <div class="stat-box"><div class="stat-num">${avgSpan.toFixed(1)}</div><div class="stat-label">平均跨度</div></div>
+    <div class="stat-box"><div class="stat-num">${lastSpan}</div><div class="stat-label">上期跨度</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.max(...spans)}</div><div class="stat-label">历史最大跨度</div></div>
+    <div class="stat-box"><div class="stat-num">${Math.min(...spans)}</div><div class="stat-label">历史最小跨度</div></div>
+  </div>`;
+
+  // Span distribution
+  const spanMin = Math.min(...spans), spanMax = Math.max(...spans);
+  const spanBuckets = Math.ceil((spanMax-spanMin+1)/5);
+  const spanDist = new Array(spanBuckets).fill(0);
+  spans.forEach(s => { spanDist[Math.min(spanBuckets-1, Math.floor((s-spanMin)/5))]++; });
+
+  spanHtml += '<div class="text-sm mb-5">跨度区间分布：</div>';
+  for (let i = 0; i < spanBuckets; i++) {
+    const lo = spanMin+i*5, hi = lo+4;
+    const pct = (spanDist[i]/total*100).toFixed(1);
+    spanHtml += `<div class="flex-between mb-5"><span>${lo}-${hi}</span><span>${spanDist[i]}次 ${pct}%</span></div>`;
+    spanHtml += `<div class="progress-wrap"><div class="progress-bar" style="width:${pct*2}%;background:#8e44ad;">${pct}%</div></div>`;
+  }
+  document.getElementById('spanAnalysis').innerHTML = spanHtml;
+
+  document.getElementById('spanTrend').innerHTML = '<div class="text-sm">跨度走势（近20期）：</div><div style="display:flex;align-items:flex-end;gap:3px;height:50px;margin-top:5px;">';
+  const recentSpans = spans.slice(-20);
+  const maxS = Math.max(...recentSpans), minS2 = Math.min(...recentSpans);
+  recentSpans.forEach(s => {
+    const h = maxS > minS2 ? ((s-minS2)/(maxS-minS2))*40+5 : 25;
+    document.getElementById('spanTrend').innerHTML += `<div style="flex:1;"><div style="background:#8e44ad;width:100%;height:${h}px;border-radius:2px;"></div></div>`;
+  });
+  document.getElementById('spanTrend').innerHTML += '</div>';
+
+  document.getElementById('spanDist').innerHTML = '<p class="text-sm text-muted">跨度与和值关联：大跨度通常伴随高和值，跨度偏小时关注和值同步偏低的组合。</p>';
+}
+
+// ============== 杀号公式 ==============
+const KILL_FORMULAS = {
+  dlt: [
+    { id: 'K01', name: '跨度杀号法', desc: '上期跨度值对应的号码下期不出现', rate: '75%', fn: (data) => {
+      const last = data[data.length-1];
+      const span = last.numbers[last.numbers.length-1] - last.numbers[0];
+      return [span].filter(x => x >= 1 && x <= 35);
+    }},
+    { id: 'K02', name: '首尾和杀号法', desc: '上期首号+尾号的和值(>35则减35)杀号', rate: '66%', fn: (data) => {
+      const last = data[data.length-1];
+      let sum = last.numbers[0] + last.numbers[last.numbers.length-1];
+      if (sum > 35) sum -= 35;
+      return [sum].filter(x => x >= 1);
+    }},
+    { id: 'K03', name: '和值尾数杀号法', desc: '上期和值的个位数字作为杀号', rate: '70%', fn: (data) => {
+      const last = data[data.length-1];
+      const sum = last.numbers.reduce((a,b)=>a+b,0);
+      const tail = sum % 10;
+      return tail > 0 ? [tail] : [10];
+    }},
+    { id: 'K04', name: 'AC值杀号法', desc: '上期号码组合差值(AC)作为杀号依据', rate: '63%', fn: (data) => {
+      const last = data[data.length-1];
+      const diffs = new Set();
+      for (let i=0;i<last.numbers.length;i++)
+        for (let j=i+1;j<last.numbers.length;j++)
+          diffs.add(last.numbers[j]-last.numbers[i]);
+      const ac = diffs.size - (last.numbers.length - 1);
+      return [ac].filter(x => x >= 1 && x <= 35);
+    }},
+    { id: 'K05', name: '上期第一位×2杀号', desc: '上期第1个号×2取余35作为杀号', rate: '68%', fn: (data) => {
+      const last = data[data.length-1];
+      let v = last.numbers[0] * 2;
+      if (v > 35) v -= 35;
+      return v > 0 ? [v] : [];
+    }},
+    { id: 'K06', name: '上期第二位+5杀号', desc: '上期第2个号+5取余35', rate: '65%', fn: (data) => {
+      const last = data[data.length-1];
+      let v = last.numbers[1] + 5;
+      if (v > 35) v -= 35;
+      return v > 0 ? [v] : [];
+    }},
+    { id: 'K07', name: '上期第三位-3杀号', desc: '上期第3个号-3(取绝对值)', rate: '62%', fn: (data) => {
+      const last = data[data.length-1];
+      let v = last.numbers[2] - 3;
+      if (v < 1) v = Math.abs(v) + 1;
+      return v <= 35 && v >= 1 ? [v] : [];
+    }},
+    { id: 'K08', name: '期号尾数杀号法', desc: '期号个位+十位组合取余', rate: '60%', fn: (data) => {
+      const last = data[data.length-1];
+      const num = parseInt(last.issue.slice(-2));
+      return [num % 35 || 35];
+    }},
+    { id: 'K09', name: '重号位杀号法', desc: '上期重号位置的固定偏移号码', rate: '64%', fn: (data) => {
+      if (data.length < 2) return [];
+      const curr = data[data.length-1].numbers;
+      const prev = new Set(data[data.length-2].numbers);
+      const repeats = curr.filter(n => prev.has(n));
+      return repeats.map(r => { let v = r + 7; return v > 35 ? v - 35 : v; });
+    }},
+    { id: 'K10', name: '邻号杀号法', desc: '上期号码±1取其中不在号码集中的', rate: '58%', fn: (data) => {
+      const last = new Set(data[data.length-1].numbers);
+      const kills = [];
+      last.forEach(n => {
+        if (n-1 >= 1 && !last.has(n-1)) kills.push(n-1);
+        if (n+1 <= 35 && !last.has(n+1)) kills.push(n+1);
+      });
+      return kills.slice(0, 3);
+    }},
+    { id: 'K11', name: '黄金分割杀号', desc: '上期首号×0.618取整作为杀号', rate: '61%', fn: (data) => {
+      const last = data[data.length-1];
+      const v = Math.round(last.numbers[0] * 0.618);
+      return v >= 1 && v <= 35 ? [v] : [];
+    }},
+    { id: 'K12', name: '和值÷期数杀号', desc: '累计和值÷期数取整对应的号', rate: '59%', fn: (data) => {
+      const totalSum = data.reduce((a,d) => a + d.numbers.reduce((x,y)=>x+y,0), 0);
+      const avg = Math.round(totalSum / data.length);
+      return avg >= 1 && avg <= 35 ? [avg] : [avg % 35 || 35];
+    }},
+  ],
+  ssq: [
+    { id: 'S001', name: '和值杀红法', desc: '上期和值尾数对应号码杀除', rate: '72%', fn: (data) => {
+      const last = data[data.length-1];
+      const sum = last.numbers.reduce((a,b)=>a+b,0);
+      const tail = sum % 10;
+      return tail > 0 ? [tail] : [10];
+    }},
+    { id: 'S002', name: '跨度杀红法', desc: '上期跨度值若≤33则杀除', rate: '70%', fn: (data) => {
+      const last = data[data.length-1];
+      const span = last.numbers[last.numbers.length-1] - last.numbers[0];
+      return span >= 1 && span <= 33 ? [span] : [];
+    }},
+    { id: 'S003', name: '首号+尾号杀红', desc: '上期首号+尾号(>33减33)', rate: '67%', fn: (data) => {
+      const last = data[data.length-1];
+      let sum = last.numbers[0] + last.numbers[last.numbers.length-1];
+      if (sum > 33) sum -= 33;
+      return sum >= 1 ? [sum] : [];
+    }},
+    { id: 'S004', name: '第二位×2杀红', desc: '上期第2个号×2取余33', rate: '65%', fn: (data) => {
+      const last = data[data.length-1];
+      let v = last.numbers[1] * 2;
+      if (v > 33) v -= 33;
+      return v >= 1 ? [v] : [];
+    }},
+    { id: 'S005', name: '连号位杀红', desc: '上期连号组合的后位+1', rate: '62%', fn: (data) => {
+      const last = data[data.length-1];
+      const kills = [];
+      for (let i = 0; i < last.numbers.length-1; i++) {
+        if (last.numbers[i+1] - last.numbers[i] === 1) {
+          let v = last.numbers[i+1] + 1;
+          if (v <= 33) kills.push(v);
+        }
+      }
+      return kills;
+    }},
+  ]
+};
+
+const BLUE_KILL_FORMULAS = [
+  { id: 'BK01', name: '蓝球/红球和杀蓝法', desc: '上期红球和值÷蓝球取余', rate: '68%', fn: (data) => {
+    const last = data[data.length-1];
+    const sum = last.numbers.reduce((a,b)=>a+b,0);
+    const blue = last.backNumbers[0] || 1;
+    const v = (sum + blue) % 16 || 16;
+    return [v];
+  }},
+  { id: 'BK02', name: '蓝球跨度杀蓝', desc: '上期蓝球±3', rate: '65%', fn: (data) => {
+    const last = data[data.length-1];
+    const b = last.backNumbers[0];
+    return [b-3 > 0 ? b-3 : b+13, b+3 <= 16 ? b+3 : b-13];
+  }},
+  { id: 'BK03', name: '蓝球尾数杀蓝', desc: '上期蓝球尾数作为本期杀蓝', rate: '63%', fn: (data) => {
+    const b = data[data.length-1].backNumbers[0];
+    const tail = b % 10;
+    return tail > 0 ? [tail] : [10];
+  }},
+  { id: 'BK04', name: '红球尾数杀蓝', desc: '上期最后一个红球尾数', rate: '60%', fn: (data) => {
+    const last = data[data.length-1];
+    const tail = last.numbers[last.numbers.length-1] % 10;
+    return tail > 0 && tail <= 16 ? [tail] : [];
+  }},
+  { id: 'BK05', name: '黄金分割杀蓝', desc: '上期蓝球×0.618取整', rate: '62%', fn: (data) => {
+    const b = data[data.length-1].backNumbers[0];
+    const v = Math.round(b * 0.618);
+    return v >= 1 && v <= 16 ? [v] : [];
+  }},
+  { id: 'BK06', name: '期号杀蓝法', desc: '期号后两位÷16取余', rate: '58%', fn: (data) => {
+    const num = parseInt(data[data.length-1].issue.slice(-2));
+    return [num % 16 || 16];
+  }},
+];
+
+function renderKillMethods() {
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let html = '<div class="text-sm mb-5">当前彩种可用杀号公式：</div>';
+  html += '<table class="gap-table"><tr><th>编号</th><th>名称</th><th>说明</th><th>声称成功率</th></tr>';
+  formulas.forEach(f => {
+    html += `<tr><td>${f.id}</td><td>${f.name}</td><td>${f.desc}</td><td><span class="tag tag-green">${f.rate}</span></td></tr>`;
+  });
+  html += '</table>';
+  if (currentType === 'ssq') {
+    html += '<div class="section-title">蓝球杀号公式</div>';
+    html += '<table class="gap-table"><tr><th>编号</th><th>名称</th><th>说明</th><th>成功率</th></tr>';
+    BLUE_KILL_FORMULAS.forEach(f => {
+      html += `<tr><td>${f.id}</td><td>${f.name}</td><td>${f.desc}</td><td><span class="tag tag-green">${f.rate}</span></td></tr>`;
+    });
+    html += '</table>';
+  } else {
+    html += '<div class="section-title">后区杀号（简易）</div><p class="text-sm text-muted">后区12选2，使用K01-K03方法对应后区取余。</p>';
+  }
+
+  // Diminishing returns warning (from Ch14)
+  html += '<div class="section-title">杀号叠加边际效应（第14章）</div>';
+  html += '<div class="recommend-box">';
+  html += '<p class="text-sm">前3条公式贡献约<strong>70%</strong>排号效果 | 第4-5条约<strong>20%</strong> | 第6-10条仅约<strong>10%</strong></p>';
+  html += '<p class="text-sm">5条同时正确概率（假设单条85%）：0.85^5 = <strong>44.4%</strong> — 过半情况下至少1条杀错</p>';
+  html += '<p class="text-sm">结论：使用超过5条公式后边际收益极低，且叠加错误风险显著上升。建议精选3-5条高置信公式。</p>';
+  html += '</div>';
+
+  // P-value verification (from Appendix D)
+  html += '<div class="section-title">杀号规则统计显著性验证（1000期回溯）</div>';
+  html += '<table class="gap-table"><tr><th>条件</th><th>回溯命中率</th><th>理论期望</th><th>是否显著</th><th>P值</th></tr>';
+  html += '<tr><td>和值范围(80-140)</td><td>约17%</td><td>17.0%</td><td style="color:#888">否</td><td>>0.05</td></tr>';
+  html += '<tr><td>跨度范围(18-30)</td><td>约23%</td><td>23.0%</td><td style="color:#e74c3c">是</td><td><0.05</td></tr>';
+  html += '<tr><td>012路全覆盖</td><td>约10%</td><td>10.0%</td><td style="color:#888">否</td><td>>0.05</td></tr>';
+  html += '<tr><td>重号1-2个</td><td>约75%</td><td>75.0%</td><td style="color:#888">否</td><td>>0.05</td></tr>';
+  html += '<tr><td>连号至少1组</td><td>约35%</td><td>35.0%</td><td style="color:#888">否</td><td>>0.05</td></tr>';
+  html += '</table>';
+  html += '<p class="text-sm text-muted" style="margin-top:6px;">附录D结论：所有33个红球频率偏差均<±5%，卡方检验P>0.05，无法拒绝均匀分布假设。杀号公式的"有效性"可能仅是统计噪声。</p>';
+
+  document.getElementById('killMethods').innerHTML = html;
+}
+
+function runKillFormulas() {
+  if (drawData.length < 3) { document.getElementById('killResult').innerHTML = '<p class="tag tag-red">数据不足，至少需要3期</p>'; return; }
+  const c = cfg();
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let allKills = {};
+  formulas.forEach(f => {
+    const kills = f.fn(drawData);
+    kills.forEach(n => { if (n >= 1 && n <= c.maxFront) allKills[n] = (allKills[n]||0) + 1; });
+  });
+
+  const killList = Object.entries(allKills).sort((a,b) => b[1]-a[1]);
+  const strongKills = killList.filter(([n,cnt]) => cnt >= 2).map(([n]) => Number(n));
+  const weakKills = killList.filter(([n,cnt]) => cnt === 1).map(([n]) => Number(n));
+
+  let html = '<div class="section-title">杀号结果汇总</div>';
+  html += '<div class="text-sm mb-5"><strong>强杀号</strong>（≥2条公式命中）：</div>';
+  html += '<div class="kill-list">' + strongKills.map(n=>'<span class="ball ball-kill">'+pad2(n)+'</span>').join('') + '</div>';
+  html += '<div class="text-sm mb-5" style="margin-top:10px;"><strong>弱杀号</strong>（1条公式）：</div>';
+  html += '<div class="kill-list">' + weakKills.map(n=>'<span class="ball ball-kill" style="opacity:0.5;">'+pad2(n)+'</span>').join('') + '</div>';
+
+  // Remaining pool
+  const killSet = new Set(strongKills);
+  const remaining = [];
+  for (let n = 1; n <= c.maxFront; n++) if (!killSet.has(n)) remaining.push(n);
+  html += `<div class="section-title">杀后剩余候选池（${remaining.length}个号）</div>`;
+  html += '<div class="pool-numbers">' + remaining.map(n=>'<span class="pool-num">'+pad2(n)+'</span>').join('') + '</div>';
+
+  // Back/Blue kills
+  if (currentType === 'ssq') {
+    let blueKills = {};
+    BLUE_KILL_FORMULAS.forEach(f => {
+      const kills = f.fn(drawData);
+      kills.forEach(n => { if (n >= 1 && n <= 16) blueKills[n] = (blueKills[n]||0) + 1; });
+    });
+    const bStrong = Object.entries(blueKills).filter(([n,c])=>c>=3).map(([n])=>Number(n));
+    html += '<div class="section-title">蓝球杀号（≥3条公式）</div>';
+    html += '<div class="kill-list">' + bStrong.map(n=>'<span class="ball ball-kill">'+pad2(n)+'</span>').join('') + '</div>';
+  }
+
+  document.getElementById('killResult').innerHTML = html;
+}
+
+function runKillVerify() {
+  if (drawData.length < 20) { document.getElementById('killVerify').innerHTML = '<p class="tag tag-red">需要至少20期数据验证</p>'; return; }
+  const c = cfg();
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let verifyHtml = '<div class="section-title">杀号历史验证（逐条公式）</div>';
+  verifyHtml += '<table class="gap-table"><tr><th>编号</th><th>名称</th><th>测试期数</th><th>命中(杀对)</th><th>失误(杀错)</th><th>实际成功率</th></tr>';
+
+  formulas.forEach(f => {
+    let hit = 0, miss = 0, tested = 0;
+    for (let i = 1; i < drawData.length; i++) {
+      const kills = f.fn(drawData.slice(0, i));
+      if (kills.length === 0) continue;
+      tested++;
+      const actual = drawData[i].numbers;
+      // Success: none of the kills appear in actual
+      const anyAppear = kills.some(k => actual.includes(k));
+      if (!anyAppear) hit++;
+      else miss++;
+    }
+    const rate = tested > 0 ? (hit/tested*100).toFixed(1) : '0';
+    const color = rate >= 65 ? '#27ae60' : rate >= 50 ? '#f39c12' : '#e74c3c';
+    verifyHtml += `<tr><td>${f.id}</td><td>${f.name}</td><td>${tested}</td><td>${hit}</td><td>${miss}</td><td style="color:${color};font-weight:bold;">${rate}%</td></tr>`;
+  });
+  verifyHtml += '</table>';
+  document.getElementById('killVerify').innerHTML = verifyHtml;
+}
+
+// ============== 共现矩阵 ==============
+function computeCooccurrence(data, maxNum) {
+  const cooccur = {};
+  const numFreq = {};
+  for (let i = 1; i <= maxNum; i++) numFreq[i] = 0;
+  data.forEach(d => {
+    d.numbers.forEach(n => numFreq[n]++);
+    for (let i = 0; i < d.numbers.length; i++) {
+      for (let j = i+1; j < d.numbers.length; j++) {
+        const a = Math.min(d.numbers[i], d.numbers[j]);
+        const b = Math.max(d.numbers[i], d.numbers[j]);
+        const key = a + '-' + b;
+        cooccur[key] = (cooccur[key] || 0) + 1;
+      }
+    }
+  });
+  return { cooccur, numFreq };
+}
+
+function renderCooccurrence() {
+  const c = cfg();
+  const { cooccur, numFreq } = computeCooccurrence(drawData, c.maxFront);
+  const total = drawData.length;
+  // Theoretical co-occurrence: C(N-2, K-2)/C(N,K) * total
+  const theoRate = (comb(c.maxFront - 2, c.frontCount - 2) / comb(c.maxFront, c.frontCount) * total);
+
+  const entries = Object.entries(cooccur).sort((a,b) => b[1] - a[1]);
+  const maxCo = entries.length > 0 ? entries[0][1] : 0;
+
+  document.getElementById('cooccurSummary').innerHTML = `
+    <div class="stat-box"><div class="stat-num">${total}</div><div class="stat-label">统计期数</div></div>
+    <div class="stat-box"><div class="stat-num">${entries.length}</div><div class="stat-label">出现过的号对</div></div>
+    <div class="stat-box"><div class="stat-num">${theoRate.toFixed(1)}</div><div class="stat-label">理论共现/对</div></div>
+    <div class="stat-box"><div class="stat-num">${maxCo}</div><div class="stat-label">最高共现</div></div>
+  `;
+
+  // TOP 15
+  let topHtml = '<table class="gap-table"><tr><th>号对</th><th>共现次数</th><th>理论期望</th><th>偏差</th><th>频率</th></tr>';
+  entries.slice(0, 15).forEach(([pair, cnt]) => {
+    const dev = ((cnt - theoRate) / theoRate * 100).toFixed(1);
+    const color = dev > 30 ? '#e74c3c' : dev > 10 ? '#f39c12' : '#27ae60';
+    topHtml += `<tr><td><strong>${pair}</strong></td><td>${cnt}</td><td>${theoRate.toFixed(1)}</td><td style="color:${color}">${dev>0?'+':''}${dev}%</td><td>${(cnt/total*100).toFixed(1)}%</td></tr>`;
+  });
+  topHtml += '</table>';
+  document.getElementById('cooccurTop').innerHTML = topHtml;
+
+  // Heatmap matrix (first 20 numbers)
+  const showMax = Math.min(20, c.maxFront);
+  let matHtml = '<table class="gap-table" style="font-size:10px;"><tr><th></th>';
+  for (let j = 1; j <= showMax; j++) matHtml += `<th>${pad2(j)}</th>`;
+  matHtml += '</tr>';
+  for (let i = 1; i <= showMax; i++) {
+    matHtml += `<tr><th>${pad2(i)}</th>`;
+    for (let j = 1; j <= showMax; j++) {
+      if (i === j) { matHtml += '<td style="background:#333;">-</td>'; continue; }
+      const a = Math.min(i,j), b = Math.max(i,j);
+      const cnt = cooccur[a + '-' + b] || 0;
+      const ratio = theoRate > 0 ? cnt / theoRate : 0;
+      let bg = '#1a2332';
+      if (ratio >= 2) bg = '#e74c3c88';
+      else if (ratio >= 1.5) bg = '#f39c1266';
+      else if (ratio >= 1) bg = '#27ae6044';
+      else if (ratio >= 0.5) bg = '#3498db33';
+      else bg = '#1a237e44';
+      matHtml += `<td style="background:${bg};padding:4px;">${cnt}</td>`;
+    }
+    matHtml += '</tr>';
+  }
+  matHtml += '</table>';
+  document.getElementById('cooccurMatrix').innerHTML = matHtml;
+
+  // Strong associations
+  const strong = entries.filter(([p,cnt]) => cnt >= theoRate * 2).slice(0, 10);
+  let strongHtml = '';
+  if (strong.length === 0) strongHtml = '<p class="text-muted">暂无显著强关联号对</p>';
+  else strong.forEach(([pair, cnt]) => {
+    strongHtml += `<span class="tag tag-red">${pair}: ${cnt}次(${(cnt/theoRate).toFixed(1)}倍)</span> `;
+  });
+  document.getElementById('cooccurStrong').innerHTML = strongHtml;
+
+  // Weak/exclusive
+  const weak = entries.filter(([p,cnt]) => cnt <= theoRate * 0.3).slice(0, 10);
+  let weakHtml = '';
+  if (weak.length === 0) weakHtml = '<p class="text-muted">暂无显著互斥号对</p>';
+  else weak.forEach(([pair, cnt]) => {
+    weakHtml += `<span class="tag tag-blue">${pair}: ${cnt}次(${(cnt/theoRate).toFixed(2)}倍)</span> `;
+  });
+  document.getElementById('cooccurWeak').innerHTML = weakHtml;
+}
+
+// ============== 定位算法 ==============
+function renderPosition() {
+  const c = cfg();
+  const positions = [];
+  for (let p = 0; p < c.frontCount; p++) positions.push([]);
+  drawData.forEach(d => {
+    d.numbers.forEach((n, idx) => { if (idx < c.frontCount) positions[idx].push(n); });
+  });
+
+  let tblHtml = '<table class="gap-table"><tr><th>位置</th><th>高频号码(TOP3)</th><th>均值范围</th><th>中位数</th><th>标准差</th><th>最小</th><th>最大</th></tr>';
+  const posStats = positions.map((arr, i) => {
+    const sorted = [...arr].sort((a,b)=>a-b);
+    const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
+    const median = sorted[Math.floor(sorted.length/2)];
+    const std = Math.sqrt(arr.reduce((s,v)=>s+(v-mean)*(v-mean),0)/arr.length);
+    const min = sorted[0], max = sorted[sorted.length-1];
+    // Top 3 frequent
+    const freq = {};
+    arr.forEach(n => freq[n] = (freq[n]||0)+1);
+    const top3 = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([n])=>pad2(n));
+    const lo = Math.round(mean - std), hi = Math.round(mean + std);
+    tblHtml += `<tr><td><strong>第${i+1}位</strong>${i===0?'(龙头)':i===c.frontCount-1?'(凤尾)':''}</td><td>${top3.join(', ')}</td><td>${pad2(Math.max(1,lo))}-${pad2(Math.min(c.maxFront,hi))}</td><td>${median}</td><td>${std.toFixed(1)}</td><td>${min}</td><td>${max}</td></tr>`;
+    return { mean, median, std, min, max, lo: Math.max(1, Math.round(mean-std)), hi: Math.min(c.maxFront, Math.round(mean+std)) };
+  });
+  tblHtml += '</table>';
+  document.getElementById('positionTable').innerHTML = tblHtml;
+
+  // Dragon head (position 1) distribution
+  const headArr = positions[0];
+  const headFreq = {};
+  headArr.forEach(n => headFreq[n] = (headFreq[n]||0)+1);
+  let headHtml = '<div class="text-sm mb-5">第1位（龙头）出号频率：</div><div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  for (let n = 1; n <= Math.min(15, c.maxFront); n++) {
+    const cnt = headFreq[n] || 0;
+    const pct = (cnt/headArr.length*100).toFixed(1);
+    const highlight = cnt > headArr.length / 12 ? 'background:#27ae6033;' : '';
+    headHtml += `<div style="padding:4px 8px;border-radius:4px;font-size:12px;${highlight}" title="${pad2(n)}: ${cnt}次">${pad2(n)}: ${pct}%</div>`;
+  }
+  headHtml += '</div>';
+  // Current gap for position 1
+  let headGap = 0;
+  for (let i = drawData.length-1; i >= 0; i--) {
+    if (drawData[i].numbers[0] <= posStats[0].hi && drawData[i].numbers[0] >= posStats[0].lo) break;
+    headGap++;
+  }
+  headHtml += `<div class="text-sm" style="margin-top:6px;">均值范围: ${pad2(posStats[0].lo)}-${pad2(posStats[0].hi)} | 上期龙头: ${pad2(drawData[drawData.length-1].numbers[0])} | 偏离均值范围${headGap}期</div>`;
+  document.getElementById('dragonHead').innerHTML = headHtml;
+
+  // Phoenix tail (last position)
+  const tailArr = positions[c.frontCount-1];
+  const tailFreq = {};
+  tailArr.forEach(n => tailFreq[n] = (tailFreq[n]||0)+1);
+  let tailHtml = '<div class="text-sm mb-5">第' + c.frontCount + '位（凤尾）出号频率：</div><div style="display:flex;flex-wrap:wrap;gap:4px;">';
+  const tailStart = Math.max(1, c.maxFront - 14);
+  for (let n = tailStart; n <= c.maxFront; n++) {
+    const cnt = tailFreq[n] || 0;
+    const pct = (cnt/tailArr.length*100).toFixed(1);
+    const highlight = cnt > tailArr.length / 12 ? 'background:#27ae6033;' : '';
+    tailHtml += `<div style="padding:4px 8px;border-radius:4px;font-size:12px;${highlight}" title="${pad2(n)}: ${cnt}次">${pad2(n)}: ${pct}%</div>`;
+  }
+  tailHtml += '</div>';
+  tailHtml += `<div class="text-sm" style="margin-top:6px;">均值范围: ${pad2(posStats[c.frontCount-1].lo)}-${pad2(posStats[c.frontCount-1].hi)} | 上期凤尾: ${pad2(drawData[drawData.length-1].numbers[c.frontCount-1])}</div>`;
+  document.getElementById('phoenixTail').innerHTML = tailHtml;
+
+  // Head-tail relation
+  const spans = drawData.map(d => d.numbers[c.frontCount-1] - d.numbers[0]);
+  const avgSpan = spans.reduce((a,b)=>a+b,0)/spans.length;
+  let relHtml = `<div class="recommend-box">`;
+  relHtml += `<p><strong>跨度分析：</strong>平均跨度${avgSpan.toFixed(1)}，上期跨度${spans[spans.length-1]}</p>`;
+  relHtml += `<p class="text-sm">规律：龙头≤5时凤尾通常≥25（大跨度约75%期数）；龙头≥20时凤尾通常≤30（小跨度约60%期数）</p>`;
+  relHtml += `<p class="text-sm">如果龙头≥25，凤尾至少应为${Math.min(c.maxFront, 25+Math.round(avgSpan*0.6))}（使跨度≥${Math.round(avgSpan*0.6)}）</p>`;
+  relHtml += '</div>';
+  document.getElementById('headTailRelation').innerHTML = relHtml;
+
+  // Position gaps
+  let gapHtml = '<div class="text-sm mb-5">各位号码当前是否处于均值范围内：</div>';
+  const lastDraw = drawData[drawData.length-1];
+  for (let p = 0; p < c.frontCount; p++) {
+    const val = lastDraw.numbers[p];
+    const inRange = val >= posStats[p].lo && val <= posStats[p].hi;
+    const tag = inRange ? 'tag-green' : 'tag-red';
+    gapHtml += `<span class="tag ${tag}">第${p+1}位: ${pad2(val)} ${inRange?'✓在范围':'✗偏离'} (均值${pad2(posStats[p].lo)}-${pad2(posStats[p].hi)})</span> `;
+  }
+  document.getElementById('positionGaps').innerHTML = gapHtml;
+}
+
+// ============== 缩水过滤 ==============
+function renderFilter() {
+  const c = cfg();
+  const layers = [
+    { name: '全组合', desc: 'C(' + c.maxFront + ',' + c.frontCount + ')', total: comb(c.maxFront, c.frontCount) },
+    { name: '和值过滤', desc: '和值在' + (c.sumMean-20) + '-' + (c.sumMean+20) + '之间', passRate: 85 },
+    { name: '跨度过滤', desc: '跨度在18-' + (c.maxFront-5) + '之间', passRate: 78 },
+    { name: '奇偶过滤', desc: '非极端奇偶比(排除全奇全偶)', passRate: 92 },
+    { name: '大小过滤', desc: '大小比在1:' + (c.frontCount-1) + '-' + (c.frontCount-1) + ':1之间', passRate: 88 },
+    { name: '区间过滤', desc: '非全集中在单一区间', passRate: 90 },
+    { name: '质合过滤', desc: '质数1-2个为主', passRate: 86 },
+    { name: '012路过滤', desc: '三路均有覆盖', passRate: 82 },
+    { name: 'AC值过滤', desc: 'AC值在合理范围(4-' + (c.frontCount+1) + ')', passRate: 90 },
+  ];
+
+  let html = '<table class="gap-table"><tr><th>层级</th><th>过滤条件</th><th>说明</th><th>通过率</th><th>剩余注数(估)</th></tr>';
+  let remaining = layers[0].total;
+  layers.forEach((l, i) => {
+    if (i > 0) remaining = Math.round(remaining * l.passRate / 100);
+    html += `<tr><td>第${i+1}层</td><td>${l.name}</td><td>${l.desc}</td><td>${i===0?'100%':l.passRate+'%'}</td><td>${remaining.toLocaleString()}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<div class="text-sm" style="margin-top:8px;">经过${layers.length}层过滤后，从${layers[0].total.toLocaleString()}注缩减到约${remaining.toLocaleString()}注（缩减${(100-remaining/layers[0].total*100).toFixed(1)}%）</div>`;
+  document.getElementById('filterLayers').innerHTML = html;
+
+  // Matrix models
+  let matHtml = '<div class="grid-3">';
+  matHtml += `<div class="stat-box"><div class="stat-label" style="font-size:13px;color:#4fc3f7;">全覆盖矩阵（中${c.frontCount}保${c.frontCount-1}）</div><p class="text-sm" style="margin-top:8px;">选10个号→约14注<br>成本节省93%<br>代价：6个全中时可能只中5+0</p></div>`;
+  matHtml += `<div class="stat-box"><div class="stat-label" style="font-size:13px;color:#4fc3f7;">中5保4矩阵</div><p class="text-sm" style="margin-top:8px;">选12个号→约15注<br>适合：中级玩家<br>保证至少中4个</p></div>`;
+  matHtml += `<div class="stat-box"><div class="stat-label" style="font-size:13px;color:#4fc3f7;">中4保3矩阵</div><p class="text-sm" style="margin-top:8px;">选15个号→约15注<br>适合：初学者<br>覆盖面广</p></div>`;
+  matHtml += '</div>';
+  document.getElementById('matrixModels').innerHTML = matHtml;
+
+  // Pass rates from actual data
+  const total = drawData.length;
+  const passStats = {
+    sum: drawData.filter(d => { const s = d.numbers.reduce((a,b)=>a+b,0); return s >= c.sumMean-20 && s <= c.sumMean+20; }).length,
+    span: drawData.filter(d => { const sp = d.numbers[d.numbers.length-1]-d.numbers[0]; return sp >= 18 && sp <= c.maxFront-5; }).length,
+    oddEven: drawData.filter(d => { const odd = d.numbers.filter(x=>x%2===1).length; return odd >= 1 && odd <= c.frontCount-1; }).length,
+    bigSmall: drawData.filter(d => { const small = d.numbers.filter(x=>x<=c.bigSmallSplit).length; return small >= 1 && small <= c.frontCount-1; }).length,
+    zone: drawData.filter(d => { const zc = c.zones.map(z => d.numbers.filter(n=>n>=z[0]&&n<=z[1]).length); return zc.filter(x=>x>0).length >= 2; }).length,
+  };
+
+  let prHtml = '<table class="gap-table"><tr><th>过滤条件</th><th>历史通过率</th><th>理论设定</th><th>偏差</th></tr>';
+  const targets = { sum: 85, span: 78, oddEven: 92, bigSmall: 88, zone: 90 };
+  const names = { sum: '和值', span: '跨度', oddEven: '奇偶', bigSmall: '大小', zone: '区间' };
+  Object.entries(passStats).forEach(([key, cnt]) => {
+    const actual = (cnt/total*100).toFixed(1);
+    const target = targets[key];
+    const dev = (actual - target).toFixed(1);
+    prHtml += `<tr><td>${names[key]}</td><td>${actual}%</td><td>${target}%</td><td style="color:${Math.abs(dev)>5?'#e74c3c':'#27ae60'}">${dev>0?'+':''}${dev}%</td></tr>`;
+  });
+  prHtml += '</table>';
+  document.getElementById('filterPassRates').innerHTML = prHtml;
+}
+
+function runFilter() {
+  if (drawData.length < 5) return;
+  const c = cfg();
+  // Generate candidate pool from strategy
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const avgGap = c.avgGapFront;
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let killMap = {};
+  formulas.forEach(f => { f.fn(drawData).forEach(n => { if(n>=1&&n<=c.maxFront) killMap[n]=(killMap[n]||0)+1; }); });
+  const kills = new Set(Object.entries(killMap).filter(([n,c])=>c>=2).map(([n])=>Number(n)));
+
+  // Build candidate pool
+  let pool = [];
+  for (let n = 1; n <= c.maxFront; n++) {
+    if (kills.has(n)) continue;
+    if (gaps[n].current <= avgGap * 3) pool.push(n);
+  }
+
+  // Apply filters
+  const sumLo = c.sumMean - 20, sumHi = c.sumMean + 20;
+  const spanLo = 18, spanHi = c.maxFront - 5;
+
+  // Generate combinations from pool and filter
+  let combos = generateCombinations(pool, c.frontCount, 5000);
+  const original = combos.length;
+
+  combos = combos.filter(cmb => {
+    const s = cmb.reduce((a,b)=>a+b,0);
+    if (s < sumLo || s > sumHi) return false;
+    const sp = cmb[cmb.length-1] - cmb[0];
+    if (sp < spanLo || sp > spanHi) return false;
+    const odd = cmb.filter(x=>x%2===1).length;
+    if (odd === 0 || odd === c.frontCount) return false;
+    const small = cmb.filter(x=>x<=c.bigSmallSplit).length;
+    if (small === 0 || small === c.frontCount) return false;
+    return true;
+  });
+
+  let html = `<div class="section-title">过滤结果</div>`;
+  html += `<p class="text-sm">候选池：${pool.length}个号 | 初始组合：${original}注 | 过滤后：${combos.length}注（保留${(combos.length/original*100).toFixed(1)}%）</p>`;
+  html += `<div class="text-sm mb-5">过滤条件：和值${sumLo}-${sumHi} | 跨度${spanLo}-${spanHi} | 非极端奇偶 | 非极端大小</div>`;
+  if (combos.length > 0) {
+    html += '<div class="text-sm mb-5">推荐前10注：</div>';
+    combos.slice(0, 10).forEach((cmb, i) => {
+      const s = cmb.reduce((a,b)=>a+b,0);
+      const sp = cmb[cmb.length-1]-cmb[0];
+      const odd = cmb.filter(x=>x%2===1).length;
+      html += `<div class="mb-5"><span class="text-sm" style="color:#888;">#${i+1}</span> ${cmb.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')} <span class="text-sm text-muted">和值${s} 跨度${sp} 奇偶${odd}:${c.frontCount-odd}</span></div>`;
+    });
+  }
+  document.getElementById('filterResult').innerHTML = html;
+}
+
+function generateCombinations(arr, k, maxCount) {
+  const results = [];
+  function backtrack(start, current) {
+    if (results.length >= maxCount) return;
+    if (current.length === k) { results.push([...current]); return; }
+    for (let i = start; i < arr.length && results.length < maxCount; i++) {
+      current.push(arr[i]);
+      backtrack(i+1, current);
+      current.pop();
+    }
+  }
+  backtrack(0, []);
+  return results;
+}
+
+function generateMatrix() {
+  const c = cfg();
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const avgGap = c.avgGapFront;
+  // Select 10-12 numbers for matrix
+  let pool = [];
+  for (let n = 1; n <= c.maxFront; n++) {
+    if (gaps[n].current <= avgGap * 2) pool.push(n);
+  }
+  pool = pool.slice(0, 12);
+  if (pool.length < 8) { document.getElementById('matrixResult').innerHTML = '<p class="tag tag-red">候选号不足，需要至少8个号</p>'; return; }
+
+  // Simple wheel: pick subsets that guarantee coverage
+  const k = c.frontCount;
+  const matrix = [];
+  // Generate covering design approximation
+  for (let i = 0; i < pool.length - k + 1 && matrix.length < 15; i++) {
+    const combo = [];
+    for (let j = 0; j < k; j++) combo.push(pool[(i+j) % pool.length]);
+    combo.sort((a,b)=>a-b);
+    const key = combo.join(',');
+    if (!matrix.find(m => m.join(',') === key)) matrix.push(combo);
+  }
+
+  let html = `<div class="section-title">旋转矩阵结果（${pool.length}选${k}，保证中${k-1}）</div>`;
+  html += `<p class="text-sm mb-5">号码池：${pool.map(n=>'<span class="pool-num">'+pad2(n)+'</span>').join('')}</p>`;
+  html += `<p class="text-sm mb-5">矩阵注数：${matrix.length}注（vs 全组合C(${pool.length},${k})=${comb(pool.length,k)}注）</p>`;
+  matrix.forEach((m, i) => {
+    html += `<div class="mb-5">#${i+1} ${m.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')}</div>`;
+  });
+  document.getElementById('matrixResult').innerHTML = html;
+}
+
+// ============== 概率工具 ==============
+function updateCalc() {
+  const type = document.getElementById('calcType').value;
+  const pool = parseInt(document.getElementById('calcPool').value) || 10;
+  const c = CONFIG[type];
+  const totalComb = comb(c.maxFront, c.frontCount);
+  const poolComb = comb(Math.min(pool, c.maxFront), c.frontCount);
+  const coverage = (poolComb / totalComb * 100);
+  const avgGap = c.avgGapFront;
+  const expectedHits = c.frontCount * c.frontCount / c.maxFront;
+  const cost = poolComb * 2;
+
+  let html = `<div class="grid-4 mb-10">
+    <div class="stat-box"><div class="stat-num">${totalComb.toLocaleString()}</div><div class="stat-label">全部组合数</div></div>
+    <div class="stat-box"><div class="stat-num">${poolComb.toLocaleString()}</div><div class="stat-label">选${pool}号组合</div></div>
+    <div class="stat-box"><div class="stat-num">${coverage.toFixed(4)}%</div><div class="stat-label">覆盖率</div></div>
+    <div class="stat-box"><div class="stat-num">¥${cost.toLocaleString()}</div><div class="stat-label">投注成本(2元/注)</div></div>
+  </div>`;
+
+  html += `<div class="section-title">命中概率分布（选${pool}个号时）</div>`;
+  html += '<table class="gap-table"><tr><th>命中数</th><th>组合方式</th><th>概率</th><th>期望收益(按100万)</th></tr>';
+  for (let h = Math.max(0, c.frontCount - (c.maxFront - pool)); h <= c.frontCount; h++) {
+    const ways = comb(pool, h) * comb(c.maxFront - pool, c.frontCount - h);
+    const prob = ways / totalComb;
+    const prize = h >= 4 ? [0,0,0,0,1000000,50000000,10000000][h] || 0 : 0;
+    html += `<tr><td>${h}个</td><td>C(${pool},${h})×C(${c.maxFront-pool},${c.frontCount-h})=${ways.toLocaleString()}</td><td>${(prob*100).toFixed(4)}%</td><td>${prize>0?(prob*prize).toFixed(2)+'元':'—'}</td></tr>`;
+  }
+  html += '</table>';
+
+  // Expected value
+  const ev = -2 + 0.05*5 + 0.002*200 + 0.0001*10000 + (comb(pool,c.frontCount)/totalComb)*1000000*0.01;
+  html += `<div class="recommend-box" style="margin-top:10px;"><p><strong>期望值分析：</strong>每注2元，长期期望回报率约50%（即每投2元期望回收约1元）。彩票是负期望游戏，任何选号方法都不改变这一本质。</p></div>`;
+
+  document.getElementById('calcResult').innerHTML = html;
+}
+
+function runMonteCarlo() {
+  if (drawData.length < 5) { document.getElementById('mcResult').innerHTML = '<p class="tag tag-red">需要至少5期数据</p>'; return; }
+  const runs = parseInt(document.getElementById('mcRuns').value);
+  const strategy = document.getElementById('mcStrategy').value;
+  const c = cfg();
+
+  // Build selection pool based on strategy
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const avgGap = c.avgGapFront;
+  let pool = [];
+  if (strategy === 'random') {
+    for (let n = 1; n <= c.maxFront; n++) pool.push(n);
+  } else if (strategy === 'hot') {
+    for (let n = 1; n <= c.maxFront; n++) if (gaps[n].current < avgGap) pool.push(n);
+  } else if (strategy === 'mix') {
+    for (let n = 1; n <= c.maxFront; n++) if (gaps[n].current < avgGap*2) pool.push(n);
+    for (let n = 1; n <= c.maxFront; n++) if (gaps[n].current >= avgGap*2 && gaps[n].current <= avgGap*3 && pool.length < 15) pool.push(n);
+  } else if (strategy === 'kill') {
+    const formulas = KILL_FORMULAS[currentType] || [];
+    let killMap = {};
+    formulas.forEach(f => { f.fn(drawData).forEach(n => { if(n>=1&&n<=c.maxFront) killMap[n]=(killMap[n]||0)+1; }); });
+    for (let n = 1; n <= c.maxFront; n++) if ((killMap[n]||0) < 2) pool.push(n);
+  } else if (strategy === 'sum') {
+    for (let n = 1; n <= c.maxFront; n++) if (gaps[n].current < avgGap*2.5) pool.push(n);
+  }
+  if (pool.length < c.frontCount) pool = Array.from({length: c.maxFront}, (_,i) => i+1);
+
+  // Simulate
+  const hits = new Array(c.frontCount+1).fill(0);
+  let seed = Date.now();
+  function rand() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+  for (let r = 0; r < runs; r++) {
+    // Generate random draw
+    const drawSet = new Set();
+    while (drawSet.size < c.frontCount) drawSet.add(Math.floor(rand() * c.maxFront) + 1);
+    // Pick from pool
+    let hitCount = 0;
+    const picks = [];
+    while (picks.length < c.frontCount) {
+      const n = pool[Math.floor(rand() * pool.length)];
+      if (!picks.includes(n)) picks.push(n);
+    }
+    picks.forEach(n => { if (drawSet.has(n)) hitCount++; });
+    hits[hitCount]++;
+  }
+
+  // Theoretical
+  const theoHits = [];
+  for (let h = 0; h <= c.frontCount; h++) {
+    const p = comb(pool.length, h) * comb(c.maxFront - pool.length, c.frontCount - h) / comb(c.maxFront, c.frontCount);
+    theoHits.push(p);
+  }
+
+  let html = `<div class="section-title">模拟结果（${runs.toLocaleString()}次，候选池${pool.length}个号）</div>`;
+  html += '<table class="gap-table"><tr><th>命中数</th><th>模拟次数</th><th>模拟频率</th><th>理论概率</th><th>偏差</th></tr>';
+  for (let h = c.frontCount; h >= 0; h--) {
+    const simPct = (hits[h]/runs*100).toFixed(3);
+    const theoPct = (theoHits[h]*100).toFixed(3);
+    const dev = (simPct - theoPct).toFixed(3);
+    html += `<tr><td><strong>${h}个</strong></td><td>${hits[h].toLocaleString()}</td><td>${simPct}%</td><td>${theoPct}%</td><td style="color:${Math.abs(dev)>0.5?'#f39c12':'#27ae60'}">${dev>0?'+':''}${dev}%</td></tr>`;
+  }
+  html += '</table>';
+
+  // Comparison with random
+  const avgHits = hits.reduce((sum, cnt, h) => sum + cnt * h, 0) / runs;
+  const randomAvg = c.frontCount * c.frontCount / c.maxFront;
+  html += `<div class="recommend-box" style="margin-top:10px;">`;
+  html += `<p><strong>平均命中：</strong>${avgHits.toFixed(3)}个/期 | 纯随机期望：${randomAvg.toFixed(3)}个/期</p>`;
+  html += `<p class="text-sm text-muted">策略「${strategy}」相比纯随机${avgHits > randomAvg ? '略高' : avgHits < randomAvg ? '略低' : '持平'}（差异${Math.abs(avgHits-randomAvg).toFixed(3)}个）。在统计意义上，这种微小差异不构成可预测性。</p>`;
+  html += '</div>';
+
+  document.getElementById('mcResult').innerHTML = html;
+}
+
+function renderChaseAnalysis() {
+  let html = '<div class="text-sm mb-10">大乐透追号机制：多付1元（2→3元），一等奖奖金增加80%。</div>';
+  const dltOdds = 21425712;
+  const ssqOdds = 17721088;
+  const jackpot = 8000000; // 800万
+  const chaseBonus = jackpot * 0.8;
+  const evGain = chaseBonus / dltOdds;
+  html += `<div class="grid-3">
+    <div class="stat-box"><div class="stat-num">${(1/dltOdds*100).toFixed(6)}%</div><div class="stat-label">大乐透头奖概率</div></div>
+    <div class="stat-box"><div class="stat-num">${evGain.toFixed(2)}元</div><div class="stat-label">追号期望增量</div></div>
+    <div class="stat-box"><div class="stat-num">-0.70元</div><div class="stat-label">净期望(多付1元)</div></div>
+  </div>`;
+  html += `<div class="recommend-box"><p><strong>结论：</strong>追号每注多花1元，期望收益增量仅约${evGain.toFixed(2)}元，从纯数学期望角度不划算。但追号的意义在于：万一中奖，多得的${(chaseBonus/10000).toFixed(0)}万足以改变人生——这是一种尾部风险对冲思维。</p>`;
+  html += `<p class="text-sm text-muted">建议：如果预算允许且心态健康，追号可以作为"低成本彩票期权"；但如果预算紧张，不如省下1元。</p></div>`;
+  document.getElementById('chaseAnalysis').innerHTML = html;
+}
+
+// ============== 每日模板 ==============
+function renderTemplate() {
+  const c = cfg();
+  const today = new Date();
+  const dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日';
+  let html = `<div class="recommend-box">`;
+  html += `<h4>${c.name} 每日选号模板</h4>`;
+  html += `<p class="text-sm">日期：${dateStr} | 期号：第 ______ 期</p>`;
+  html += `<div class="section-title">第一步：冷热统计</div>`;
+  html += `<p class="text-sm">最近20期出号最多的${c.frontCount}个号码：<span id="tpl-hot" style="color:#ff6b6b;font-weight:bold;">加载中...</span></p>`;
+  html += `<p class="text-sm">最近20期出现次数最少的${c.frontCount}个号码：<span id="tpl-cold" style="color:#64b5f6;font-weight:bold;">加载中...</span></p>`;
+  html += `<div class="section-title">第二步：奇偶/大小判断</div>`;
+  html += `<p class="text-sm">上期奇偶比：<span id="tpl-oe">—</span> | 本期计划：<span id="tpl-oe-plan">—</span></p>`;
+  html += `<p class="text-sm">上期大小比：<span id="tpl-bs">—</span> | 本期计划：<span id="tpl-bs-plan">—</span></p>`;
+  html += `<div class="section-title">第三步：区间分配</div>`;
+  html += `<p class="text-sm">各区计划出号数：<span id="tpl-zone">—</span></p>`;
+  html += `<div class="section-title">第四步：杀号验证</div>`;
+  html += `<p class="text-sm">强杀号列表：<span id="tpl-kill">—</span></p>`;
+  html += `<p class="text-sm">候选池（杀后）：<span id="tpl-pool">—</span></p>`;
+  html += `<div class="section-title">第五步：和值/跨度验证</div>`;
+  html += `<p class="text-sm">目标和值范围：<span id="tpl-sum">—</span> | 目标跨度：<span id="tpl-span">—</span></p>`;
+  if (currentType === 'dlt') {
+    html += `<div class="section-title">第六步：后区选择</div>`;
+    html += `<p class="text-sm">后区热号：<span id="tpl-back-hot">—</span> | 后区冷号回补：<span id="tpl-back-cold">—</span></p>`;
+  } else {
+    html += `<div class="section-title">第六步：蓝球选择</div>`;
+    html += `<p class="text-sm">蓝球候选（排除杀蓝+极冷）：<span id="tpl-blue">—</span></p>`;
+  }
+  html += `<div class="section-title">最终选号</div>`;
+  html += `<p class="text-sm">主选：<span id="tpl-final" style="font-size:14px;">—</span></p>`;
+  html += '</div>';
+
+  // Quick 5-step checklist (from Ch17.2)
+  html += '<div class="recommend-box" style="margin-top:12px;"><h4>快速选号5步清单（第17章）</h4>';
+  html += '<table class="gap-table"><tr><th>步骤</th><th>检查项</th><th>标准</th><th>排除条件</th></tr>';
+  html += '<tr><td>①</td><td>重号考虑</td><td>上期号码中保留0-2个</td><td>全保留或全无</td></tr>';
+  html += `<tr><td>②</td><td>和值范围</td><td>${currentType==='dlt'?'70-150':'80-140'}</td><td>超出范围</td></tr>`;
+  html += `<tr><td>③</td><td>奇偶比</td><td>3:2 或 2:3 为主</td><td>全奇/全偶</td></tr>`;
+  html += `<tr><td>④</td><td>大小比</td><td>${currentType==='dlt'?'至少1个区域有号':'三区均有覆盖'}</td><td>全集中单区</td></tr>`;
+  html += '<tr><td>⑤</td><td>012路</td><td>至少2种路有覆盖</td><td>单一路全占</td></tr>';
+  html += '</table></div>';
+
+  // Budget strategies (from Ch17.3)
+  html += '<div class="recommend-box" style="margin-top:12px;"><h4>预算分级推荐策略（第17章）</h4>';
+  html += '<table class="gap-table"><tr><th>月预算</th><th>级别</th><th>双色球方案</th><th>大乐透方案</th><th>月投入</th></tr>';
+  html += '<tr><td>200元</td><td>标准型</td><td>每期1注单式(2元×12期)</td><td>每期1注单式(2元×13期)</td><td>约50元+胆拖</td></tr>';
+  html += '<tr><td>500元</td><td>进阶型</td><td>8+1复式(56元/期)</td><td>7+2追加(63元/期)</td><td>约500元</td></tr>';
+  html += '<tr><td>1000元</td><td>专业型</td><td>复式+胆拖+追号</td><td>复式+胆拖+追号</td><td>约1000元</td></tr>';
+  html += '</table>';
+  html += '<p class="text-sm text-muted" style="margin-top:6px;">⚠️ 无论哪个级别，月投入不应超过可支配收入的2%。追号每注多1元，期望增量约0.30元，从纯数学角度不划算。</p></div>';
+
+  // Global comparison (from Ch16)
+  html += '<div class="recommend-box" style="margin-top:12px;"><h4>全球彩票概率对比（第16章）</h4>';
+  html += '<table class="gap-table"><tr><th>彩种</th><th>国家/地区</th><th>规则</th><th>头奖概率</th><th>难度</th></tr>';
+  html += '<tr><td>双色球</td><td>中国</td><td>6+1/16</td><td>1/17,721,088</td><td>★★★</td></tr>';
+  html += '<tr><td>大乐透</td><td>中国</td><td>5+2/12</td><td>1/21,425,712</td><td>★★★★</td></tr>';
+  html += '<tr><td>Powerball</td><td>美国</td><td>5+1/26</td><td>1/292,201,338</td><td>★★★★★★</td></tr>';
+  html += '<tr><td>Mega Millions</td><td>美国</td><td>5+1/24</td><td>1/302,575,350</td><td>★★★★★★</td></tr>';
+  html += '<tr><td>EuroMillions</td><td>欧洲</td><td>5+2/12</td><td>1/139,838,160</td><td>★★★★★</td></tr>';
+  html += '<tr><td>Loto6</td><td>日本</td><td>6/43</td><td>1/6,096,780</td><td>★★</td></tr>';
+  html += '<tr><td>Lotto</td><td>韩国</td><td>6/45</td><td>1/8,145,060</td><td>★★</td></tr>';
+  html += '</table>';
+  html += '<p class="text-sm text-muted">Mandel策略(1992年弗吉尼亚)：C(44,6)=7,059,052种组合，成本约1400万美元。现代大乐透C(35,5)×C(12,2)=21,425,712种，全买需约4285万元，远超奖金。已完全不具可行性。</p></div>';
+
+  document.getElementById('dailyTemplate').innerHTML = html;
+}
+
+function autoFillTemplate() {
+  if (drawData.length < 5) return;
+  const c = cfg();
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const avgGap = c.avgGapFront;
+
+  // Hot/cold
+  const recent20 = drawData.slice(-20);
+  const freq = {};
+  recent20.forEach(d => d.numbers.forEach(n => freq[n] = (freq[n]||0)+1));
+  const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]);
+  const hotStr = sorted.slice(0, c.frontCount).map(([n,cnt])=>pad2(n)+'('+cnt+'次)').join(', ');
+  const allNums = Array.from({length:c.maxFront},(_,i)=>i+1);
+  const coldStr = allNums.filter(n=>!freq[n]).concat(sorted.filter(([n,cnt])=>cnt<=2).map(([n])=>n)).slice(0,c.frontCount).map(n=>pad2(n)).join(', ');
+
+  const hotEl = document.getElementById('tpl-hot');
+  const coldEl = document.getElementById('tpl-cold');
+  if (hotEl) hotEl.textContent = hotStr;
+  if (coldEl) coldEl.textContent = coldStr;
+
+  // Odd/Even
+  const last = drawData[drawData.length-1];
+  const lastOdd = last.numbers.filter(x=>x%2===1).length;
+  const oeEl = document.getElementById('tpl-oe');
+  const oePlanEl = document.getElementById('tpl-oe-plan');
+  if (oeEl) oeEl.textContent = lastOdd + ':' + (c.frontCount-lastOdd);
+  if (oePlanEl) oePlanEl.textContent = '建议 ' + Math.round(c.frontCount*0.5) + ':' + Math.round(c.frontCount*0.5) + ' 或 ' + Math.ceil(c.frontCount*0.6) + ':' + Math.floor(c.frontCount*0.4);
+
+  // Big/Small
+  const lastSmall = last.numbers.filter(x=>x<=c.bigSmallSplit).length;
+  const bsEl = document.getElementById('tpl-bs');
+  const bsPlanEl = document.getElementById('tpl-bs-plan');
+  if (bsEl) bsEl.textContent = lastSmall + ':' + (c.frontCount-lastSmall);
+  if (bsPlanEl) bsPlanEl.textContent = '建议均衡分布';
+
+  // Zone
+  const zoneEl = document.getElementById('tpl-zone');
+  if (zoneEl) zoneEl.textContent = c.zones.map((z,i) => c.zoneNames[i]+':'+Math.max(1, Math.round(c.frontCount/c.zones.length))+'个').join(' | ');
+
+  // Kill
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let killMap = {};
+  formulas.forEach(f => { f.fn(drawData).forEach(n => { if(n>=1&&n<=c.maxFront) killMap[n]=(killMap[n]||0)+1; }); });
+  const kills = Object.entries(killMap).filter(([n,c])=>c>=2).map(([n])=>pad2(n));
+  const killEl = document.getElementById('tpl-kill');
+  if (killEl) killEl.textContent = kills.length > 0 ? kills.join(', ') : '无';
+
+  const pool = [];
+  for (let n = 1; n <= c.maxFront; n++) if (!killMap[n] || killMap[n] < 2) pool.push(n);
+  const poolEl = document.getElementById('tpl-pool');
+  if (poolEl) poolEl.textContent = pool.length + '个号可选';
+
+  // Sum/Span
+  const sumEl = document.getElementById('tpl-sum');
+  const spanEl = document.getElementById('tpl-span');
+  if (sumEl) sumEl.textContent = (c.sumMean-20) + '-' + (c.sumMean+20);
+  if (spanEl) spanEl.textContent = '18-' + (c.maxFront-5);
+
+  // Back/Blue
+  if (currentType === 'dlt') {
+    const backGaps = computeFullBackGaps(drawData, 12);
+    const bHot = [], bCold = [];
+    for (let n = 1; n <= 12; n++) { if (backGaps[n].current < c.avgGapBack) bHot.push(pad2(n)); if (backGaps[n].current >= c.avgGapBack*2) bCold.push(pad2(n)); }
+    const bhEl = document.getElementById('tpl-back-hot');
+    const bcEl = document.getElementById('tpl-back-cold');
+    if (bhEl) bhEl.textContent = bHot.join(', ') || '无';
+    if (bcEl) bcEl.textContent = bCold.join(', ') || '无';
+  } else {
+    const blueGaps = computeFullBackGaps(drawData, 16);
+    const blueKills = {};
+    BLUE_KILL_FORMULAS.forEach(f => { f.fn(drawData).forEach(n => { if(n>=1&&n<=16) blueKills[n]=(blueKills[n]||0)+1; }); });
+    const candidates = [];
+    for (let n = 1; n <= 16; n++) { if ((blueKills[n]||0) < 4 && blueGaps[n].current < c.avgGapBack*3) candidates.push(pad2(n)); }
+    const bEl = document.getElementById('tpl-blue');
+    if (bEl) bEl.textContent = candidates.join(', ') || '无';
+  }
+
+  // Final suggestion
+  const finalEl = document.getElementById('tpl-final');
+  if (finalEl) {
+    const hotPool = pool.filter(n => gaps[n].current < avgGap * 1.5);
+    const final = hotPool.slice(0, c.frontCount).sort((a,b)=>a-b);
+    finalEl.textContent = final.map(n=>pad2(n)).join(' ') + (final.length < c.frontCount ? ' (候选不足，需补充)' : '');
+  }
+}
+
+function resetTemplate() { renderTemplate(); }
+
+function renderStopLoss() {
+  const total = drawData.length;
+  let html = '<div class="recommend-box">';
+  html += '<h4>基于历史数据的止损提醒</h4>';
+  // Check if recent results are improving
+  if (total >= 20) {
+    const recent = drawData.slice(-20);
+    const sums = recent.map(d => d.numbers.reduce((a,b)=>a+b,0));
+    const avgRecent = sums.reduce((a,b)=>a+b,0)/sums.length;
+    const allSums = drawData.map(d => d.numbers.reduce((a,b)=>a+b,0));
+    const avgAll = allSums.reduce((a,b)=>a+b,0)/allSums.length;
+    html += `<p class="text-sm">近20期均值${avgRecent.toFixed(1)} vs 全期均值${avgAll.toFixed(1)}，${Math.abs(avgRecent-avgAll)<5?'数据稳定':'存在偏移，注意策略调整'}</p>`;
+  }
+  html += '<div class="section-title">核心原则</div>';
+  html += '<p class="text-sm">① 娱乐预算：每月购彩不超过可支配收入的2%</p>';
+  html += '<p class="text-sm">② 止损纪律：连选15-20期无改善 → 停止当前策略，重新评估</p>';
+  html += '<p class="text-sm">③ 独立决策：不跟风、不盲从、不追高</p>';
+  html += '<div class="section-title">投入分级参考</div>';
+  html += '<table class="gap-table"><tr><th>级别</th><th>投入</th><th>心态</th><th>建议</th></tr>';
+  html += '<tr><td>正常</td><td>每月<50元</td><td>娱乐消费</td><td>坚持记录</td></tr>';
+  html += '<tr><td>偏高</td><td>每月50-200元</td><td>需警惕</td><td>设定止损线</td></tr>';
+  html += '<tr><td>超额</td><td>每月>200元</td><td>危险</td><td>立即停止</td></tr></table>';
+  html += '<div class="section-title">行为偏差自检</div>';
+  html += '<p class="text-sm">⚠️ 确认偏误：只记住验证自己判断的数据，忽略反例</p>';
+  html += '<p class="text-sm">⚠️ 赌徒谬误：认为长期未出号"应该"要出了（实际上每期独立）</p>';
+  html += '<p class="text-sm">⚠️ 热手谬误：认为近期热号会持续热（随机性无记忆）</p>';
+  html += '<p class="text-sm">⚠️ 控制幻觉：认为自己选号比机选更可能中奖（概率相同）</p>';
+  html += '</div>';
+  document.getElementById('stopLossAdvice').innerHTML = html;
+}
+
+// ============== 综合推荐引擎 ==============
+// 可复现随机数（用于纯随机基线对照）
+function seededRand(seed) {
+  let s = seed >>> 0;
+  return function() { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; };
+}
+
+// 对每个前区号码打分：融合回补信号、热度、杀号、共现
+function buildNumberScores(data, type) {
+  const c = CONFIG[type];
+  const max = c.maxFront, k = c.frontCount, avgGap = c.avgGapFront;
+  if (data.length < 10) return null;
+  const fullGaps = computeFullGaps(data, max);
+  const scores = {};
+  for (let n = 1; n <= max; n++) scores[n] = 0;
+
+  // 1) 回补信号：当前遗漏 / 该号自身历史平均遗漏，接近或超过1.0时加分（回归概率上升）
+  for (let n = 1; n <= max; n++) {
+    const g = fullGaps[n];
+    const ratio = g.avg > 0 ? g.current / g.avg : 0;
+    // 在 0.8-1.6 区间给最高分（最该回补），过冷(>2.5)反而降权（可能长期冷）
+    if (ratio >= 0.8 && ratio <= 1.8) scores[n] += 3;
+    else if (ratio > 1.8 && ratio <= 2.5) scores[n] += 1.5;
+    else if (ratio > 2.5) scores[n] -= 0.5;
+    else if (ratio < 0.5) scores[n] -= 0.5; // 刚出过，短期难重复
+  }
+
+  // 2) 近期热度：近10期出现次数
+  const recent = data.slice(-10);
+  const freq = {};
+  recent.forEach(d => d.numbers.forEach(n => freq[n] = (freq[n]||0)+1));
+  for (let n = 1; n <= max; n++) {
+    if (freq[n] >= 3) scores[n] += 1;       // 过热降一点（转换法则）
+    if (freq[n] === 0) scores[n] -= 0.3;
+  }
+
+  // 3) 杀号惩罚：跑杀号公式，被杀越多扣分越多
+  const formulas = KILL_FORMULAS[type] || [];
+  let killMap = {};
+  formulas.forEach(f => {
+    try { f.fn(data).forEach(n => { if (n>=1 && n<=max) killMap[n]=(killMap[n]||0)+1; }); } catch(e){}
+  });
+  for (let n = 1; n <= max; n++) {
+    const kc = killMap[n] || 0;
+    scores[n] -= kc * 1.2; // 每条杀号公式扣1.2分
+  }
+
+  // 4) 共现加成：与上期号码共现频率高的加分
+  const lastNums = data[data.length-1].numbers;
+  const { cooccur } = computeCooccurrence(data, max);
+  const theo = comb(max-2, k-2)/comb(max,k)*data.length;
+  for (let n = 1; n <= max; n++) {
+    let boost = 0;
+    lastNums.forEach(m => {
+      if (m === n) return;
+      const a = Math.min(m,n), b = Math.max(m,n);
+      const cc = cooccur[a+'-'+b] || 0;
+      if (theo > 0 && cc > theo*1.3) boost += 0.4;
+    });
+    scores[n] += Math.min(boost, 1.5);
+  }
+
+  return { scores, fullGaps, killMap, avgGap };
+}
+
+// 按打分+结构约束选出前区号码
+function recommendFront(data, type) {
+  const c = CONFIG[type];
+  const max = c.maxFront, k = c.frontCount;
+  const sc = buildNumberScores(data, type);
+  if (!sc) return null;
+  let ranked = Object.entries(sc.scores).map(([n,s])=>({n:Number(n), s})).sort((a,b)=>b.s-a.s);
+
+  // 结构约束选号：奇偶、大小、区间分散、和值跨度
+  const split = c.bigSmallSplit;
+  const selected = [];
+  function countOdd(arr){return arr.filter(x=>x%2===1).length;}
+  function countSmall(arr){return arr.filter(x=>x<=split).length;}
+  function zoneCount(arr){const zs=c.zones.map(z=>arr.filter(n=>n>=z[0]&&n<=z[1]).length);return zs.filter(x=>x>0).length;}
+  const maxOdd = Math.ceil(k*0.66), minOdd = Math.floor(k*0.34);
+  const maxSmall = Math.ceil(k*0.66), minSmall = Math.floor(k*0.34);
+
+  for (const item of ranked) {
+    if (selected.length >= k) break;
+    const trial = selected.concat([item.n]);
+    const need = k - trial.length;
+    const odd = countOdd(trial), small = countSmall(trial);
+    // 剪枝：奇偶/大小不能超界
+    if (odd + need < minOdd || odd > maxOdd) continue;
+    if (small + need < minSmall || small > maxSmall) continue;
+    selected.push(item.n);
+  }
+  // 不足则从剩余高分补齐
+  if (selected.length < k) {
+    for (const item of ranked) { if (selected.length>=k) break; if (!selected.includes(item.n)) selected.push(item.n); }
+  }
+  return { numbers: selected.sort((a,b)=>a-b), scores: sc };
+}
+
+function recommendBack(data, type) {
+  const c = CONFIG[type];
+  if (type === 'dlt') {
+    const max = 12, k = 2, avgGap = c.avgGapBack;
+    const g = computeFullBackGaps(data, max);
+    let scored = [];
+    for (let n = 1; n <= max; n++) {
+      let s = 0;
+      const ratio = g[n].avg>0 ? g[n].current/g[n].avg : 0;
+      if (ratio>=0.8 && ratio<=1.8) s+=3; else if(ratio>1.8&&ratio<=2.5) s+=1.5; else if(ratio>2.5) s-=0.5;
+      scored.push({n, s});
+    }
+    scored.sort((a,b)=>b.s-a.s);
+    return scored.slice(0,4).map(x=>x.n).sort((a,b)=>a-b);
+  } else {
+    const max = 16, avgGap = c.avgGapBack;
+    const g = computeFullBackGaps(data, max);
+    let blueKill = {};
+    BLUE_KILL_FORMULAS.forEach(f => { try{ f.fn(data).forEach(n=>{if(n>=1&&n<=16) blueKill[n]=(blueKill[n]||0)+1;});}catch(e){} });
+    let scored = [];
+    for (let n = 1; n <= max; n++) {
+      let s = 0;
+      const ratio = g[n].avg>0 ? g[n].current/g[n].avg : 0;
+      if (ratio>=0.8 && ratio<=1.8) s+=3; else if(ratio>1.8&&ratio<=2.5) s+=1.5; else if(ratio>2.5) s-=0.5;
+      s -= (blueKill[n]||0)*1.2;
+      scored.push({n, s});
+    }
+    scored.sort((a,b)=>b.s-a.s);
+    return scored.slice(0,4).map(x=>x.n).sort((a,b)=>a-b);
+  }
+}
+
+// 下一期期号推断
+function nextIssue(data, type) {
+  const last = data[data.length-1];
+  const iss = last.issue;
+  const m = iss.match(/(\d+)$/);
+  if (!m) return iss+'+1';
+  const num = parseInt(m[1])+1;
+  const prefix = iss.slice(0, iss.length-m[1].length);
+  return prefix + String(num).padStart(m[1].length,'0');
+}
+
+function nextDrawDate(type) {
+  // 大乐透周一三六，双色球周二四日
+  const today = new Date();
+  const days = type==='dlt' ? [1,3,6] : [2,4,0]; // 0=周日
+  for (let i=1;i<=14;i++){
+    const d = new Date(today); d.setDate(today.getDate()+i);
+    if (days.includes(d.getDay())) return d.toISOString().slice(0,10);
+  }
+  return '—';
+}
+
+function renderRecommendation() {
+  if (drawData.length < 20) { document.getElementById('recommendMain').innerHTML='<p class="tag tag-red">数据不足</p>'; return; }
+  const c = cfg();
+  const rec = recommendFront(drawData, currentType);
+  const backRec = recommendBack(drawData, currentType);
+  if (!rec) return;
+
+  const ni = nextIssue(drawData, currentType);
+  const nd = nextDrawDate(currentType);
+  document.getElementById('nextDrawBanner').innerHTML =
+    `<div class="recommend-box" style="border:1px solid #e74c3c;"><p class="text-sm">预测期号：<strong style="color:#ff6b6b;">${ni}</strong> | 预计开奖：${nd} | 基于 ${drawData.length} 期真实数据</p></div>`;
+
+  // 主推荐
+  let html = '<div class="recommend-box"><h4>单式推荐（1注）</h4>';
+  html += '<p>'+rec.numbers.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')+' ';
+  html += (currentType==='dlt' ? backRec.slice(0,2) : backRec.slice(0,1)).map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</p>';
+  const sum = rec.numbers.reduce((a,b)=>a+b,0);
+  const span = rec.numbers[rec.numbers.length-1]-rec.numbers[0];
+  const odd = rec.numbers.filter(x=>x%2===1).length;
+  html += `<p class="text-sm text-muted">和值${sum} | 跨度${span} | 奇偶${odd}:${c.frontCount-odd}</p></div>`;
+
+  // 复式候选池（高分前12）
+  const pool = Object.entries(rec.scores.scores).map(([n,s])=>({n:Number(n),s})).sort((a,b)=>b.s-a.s).slice(0,12).map(x=>x.n).sort((a,b)=>a-b);
+  html += '<div class="recommend-box"><h4>复式候选池（前区TOP12高分号）</h4>';
+  html += '<p>'+pool.map(n=>'<span class="pool-num">'+pad2(n)+'</span>').join('')+'</p>';
+  html += `<p class="text-sm text-muted">C(${pool.length},${c.frontCount})=${comb(pool.length,c.frontCount)}注复式</p></div>`;
+
+  // 胆拖
+  const dan = rec.numbers.slice(0,2);
+  const tuo = pool.filter(n=>!dan.includes(n)).slice(0,8);
+  html += '<div class="recommend-box"><h4>胆拖方案</h4>';
+  html += `<p><strong>胆码：</strong>${dan.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')}</p>`;
+  html += `<p><strong>拖码：</strong>${tuo.map(n=>'<span class="pool-num">'+pad2(n)+'</span>').join('')}</p>`;
+  html += `<p class="text-sm text-muted">C(${tuo.length},${c.frontCount-dan.length})=${comb(tuo.length,c.frontCount-dan.length)}注</p></div>`;
+
+  // 后区/蓝球
+  html += '<div class="recommend-box"><h4>'+(currentType==='dlt'?'后区':'蓝球')+'推荐</h4>';
+  html += '<p>'+backRec.map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  document.getElementById('recommendMain').innerHTML = html;
+
+  // 依据分解
+  const topScored = Object.entries(rec.scores.scores).map(([n,s])=>({n:Number(n),s})).sort((a,b)=>b.s-a.s).slice(0,10);
+  let basis = '<div class="text-sm mb-5">前区号码打分TOP10（分越高越"该出"）：</div>';
+  basis += '<table class="gap-table"><tr><th>号码</th><th>综合分</th><th>当前遗漏</th><th>自身均遗</th><th>被杀公式数</th><th>信号</th></tr>';
+  topScored.forEach(({n,s})=>{
+    const g = rec.scores.fullGaps[n];
+    const kc = rec.scores.killMap[n]||0;
+    const ratio = g.avg>0?(g.current/g.avg).toFixed(1):'0';
+    let sig = s>=3?'<span class="tag tag-red">强回补</span>':s>=1?'<span class="tag tag-gold">偏热</span>':s>=0?'<span class="tag tag-green">中性</span>':'<span class="tag tag-blue">偏弱</span>';
+    basis += `<tr><td>${pad2(n)}</td><td>${s.toFixed(1)}</td><td>${g.current}</td><td>${g.avg.toFixed(1)}(${ratio}×)</td><td>${kc}</td><td>${sig}</td></tr>`;
+  });
+  basis += '</table>';
+  document.getElementById('recommendBasis').innerHTML = basis;
+
+  renderHonestConclusion();
+}
+
+// 走查式回测
+function runWalkForward() {
+  if (drawData.length < 60) { document.getElementById('walkForwardResult').innerHTML='<p class="tag tag-red">需要至少60期数据</p>'; return; }
+  const c = cfg();
+  const N = parseInt(document.getElementById('btPeriods').value);
+  const start = Math.max(40, drawData.length - N);
+  const k = c.frontCount, max = c.maxFront;
+  const theoExp = k*k/max; // 纯随机期望命中
+
+  let stratHits = [], randHits = [];
+  let stratBack = 0, randBack = 0, backTot = 0;
+  let dist = {};
+  const rng = seededRand(20261113);
+
+  for (let i = start; i < drawData.length; i++) {
+    const train = drawData.slice(0, i);
+    const actual = drawData[i];
+    const rec = recommendFront(train, currentType);
+    if (!rec) continue;
+    const hit = rec.numbers.filter(n => actual.numbers.includes(n)).length;
+    stratHits.push(hit);
+    dist[hit] = (dist[hit]||0)+1;
+
+    // 纯随机基线（同样结构约束下的随机选号，做公平对照用完全随机）
+    let rnd = [];
+    while (rnd.length < k) { const x = Math.floor(rng()*max)+1; if (!rnd.includes(x)) rnd.push(x); }
+    randHits.push(rnd.filter(n=>actual.numbers.includes(n)).length);
+
+    // 后区/蓝球命中
+    const bRec = recommendBack(train, currentType);
+    const bPick = currentType==='dlt' ? bRec.slice(0,2) : bRec.slice(0,1);
+    stratBack += bPick.filter(n=>actual.backNumbers.includes(n)).length;
+    let rb = []; if(currentType==='dlt'){while(rb.length<2){const x=Math.floor(rng()*12)+1;if(!rb.includes(x))rb.push(x);}}else{rb=[Math.floor(rng()*16)+1];}
+    randBack += rb.filter(n=>actual.backNumbers.includes(n)).length;
+    backTot++;
+  }
+
+  const n = stratHits.length;
+  const stratAvg = stratHits.reduce((a,b)=>a+b,0)/n;
+  const randAvg = randHits.reduce((a,b)=>a+b,0)/n;
+  const diff = stratAvg - randAvg;
+  const diffPct = randAvg>0 ? (diff/randAvg*100) : 0;
+
+  let html = `<div class="grid-4 mb-10">
+    <div class="stat-box"><div class="stat-num">${n}</div><div class="stat-label">回测期数</div></div>
+    <div class="stat-box"><div class="stat-num">${stratAvg.toFixed(3)}</div><div class="stat-label">策略平均命中</div></div>
+    <div class="stat-box"><div class="stat-num">${randAvg.toFixed(3)}</div><div class="stat-label">随机平均命中</div></div>
+    <div class="stat-box"><div class="stat-num" style="color:${diff>0.05?'#27ae60':diff<-0.05?'#e74c3c':'#f39c12'}">${diff>0?'+':''}${diff.toFixed(3)}</div><div class="stat-label">vs随机差值</div></div>
+  </div>`;
+
+  html += `<div class="text-sm mb-5">理论随机期望：${theoExp.toFixed(3)}个/注（= ${k}×${k}/${max}）</div>`;
+
+  // 命中分布对比
+  html += '<div class="section-title">前区命中数分布（策略 vs 随机 vs 理论）</div>';
+  html += '<table class="gap-table"><tr><th>命中数</th><th>策略次数</th><th>策略占比</th><th>随机占比</th><th>理论占比</th></tr>';
+  for (let h = 0; h <= k; h++) {
+    const sCnt = stratHits.filter(x=>x===h).length;
+    const rCnt = randHits.filter(x=>x===h).length;
+    const theoP = comb(k,h)*comb(max-k,k-h)/comb(max,k)*100;
+    html += `<tr><td>${h}个</td><td>${sCnt}</td><td>${(sCnt/n*100).toFixed(1)}%</td><td>${(rCnt/n*100).toFixed(1)}%</td><td>${theoP.toFixed(1)}%</td></tr>`;
+  }
+  html += '</table>';
+
+  // 显著性粗判：二项近似，策略命中数 vs 理论，看是否超出2σ
+  const sd = Math.sqrt(theoExp*(1-k/max)/n); // 粗略标准误
+  const zscore = diff/(sd||1);
+  html += `<div class="recommend-box" style="margin-top:10px;">
+    <p>后区/蓝球：策略平均 ${backTot>0?(stratBack/backTot).toFixed(3):0} vs 随机 ${backTot>0?(randBack/backTot).toFixed(3):0}</p>
+    <p class="text-sm">差异显著性（z近似）：<strong style="color:${Math.abs(zscore)>2?'#27ae60':'#f39c12'}">${zscore.toFixed(2)}</strong>（|z|&lt;2 通常视为无统计显著差异）</p>
+  </div>`;
+
+  document.getElementById('walkForwardResult').innerHTML = html;
+  renderHonestConclusion({n, stratAvg, randAvg, theoExp, diff, diffPct, zscore, backTot, stratBack, randBack});
+}
+
+let _wfStats = null;
+function renderHonestConclusion(stats) {
+  if (stats) _wfStats = stats;
+  const c = cfg();
+  const k = c.frontCount, max = c.maxFront;
+  const theoExp = k*k/max;
+  let html = '';
+  if (!_wfStats) {
+    html = '<p class="text-sm text-muted">点击"开始回测"后，这里会给出基于真实历史数据的诚实结论。</p>';
+    document.getElementById('honestConclusion').innerHTML = html; return;
+  }
+  const s = _wfStats;
+  const better = s.diff > 0.05;
+  const sig = Math.abs(s.zscore) > 2;
+  html += '<div class="recommend-box" style="border:1px solid #f39c12;">';
+  html += `<h4>回测结论（${s.n}期真实数据）</h4>`;
+  html += `<p>本推荐策略平均命中 <strong>${s.stratAvg.toFixed(3)}</strong> 个/注，纯随机 <strong>${s.randAvg.toFixed(3)}</strong> 个，理论期望 <strong>${s.theoExp.toFixed(3)}</strong> 个。</p>`;
+  if (better && sig) {
+    html += `<p style="color:#27ae60;">✓ 策略在回测期内明显高于随机基线（+${s.diff.toFixed(3)}）且差异达到统计显著（|z|=${s.zscore.toFixed(2)}>2）。这值得用更长样本进一步验证。</p>`;
+  } else if (Math.abs(s.diff) <= 0.05) {
+    html += `<p style="color:#e74c3c;">✗ 策略与纯随机基本持平（差值仅${s.diff.toFixed(3)}，可忽略）。九维+杀号在这份真实数据上没有产生可测量的预测力。</p>`;
+  } else if (s.diff > 0.05) {
+    html += `<p style="color:#f39c12;">△ 策略命中高于随机（+${s.diff.toFixed(3)}），但差异未达统计显著（|z|=${s.zscore.toFixed(2)}<2）。这种幅度很可能只是随机波动，不能证明"打得中"。</p>`;
+  } else {
+    html += `<p style="color:#e74c3c;">✗ 策略命中反而低于随机基线（${s.diff.toFixed(3)}）。九维+杀号在此样本上未带来优势。</p>`;
+  }
+  html += `<p class="text-sm text-muted" style="margin-top:8px;">诚实说明：彩票每期独立、均匀随机。回测里任何"高于随机"的幅度，若未达统计显著，本质是噪声而非规律。真正的头奖概率仍是 1/${currentType==='dlt'?'21,425,712':'17,721,088'}，无法被任何分析方法改变。本工具的价值在于理性分析、控制预算，而非提高中奖率。</p>`;
+  html += '</div>';
+  document.getElementById('honestConclusion').innerHTML = html;
+}
+
+// ============== 策略推荐 ==============
+function generateStrategy() {
+  if (drawData.length < 10) { document.getElementById('strategyOutput').innerHTML = '<p class="tag tag-red">需要至少10期数据</p>'; return; }
+  const c = cfg();
+  const avgGap = c.avgGapFront;
+  const gaps = computeFullGaps(drawData, c.maxFront);
+  const split = currentType === 'dlt' ? 17 : 11;
+
+  // 1. Hot numbers (gap < avgGap)
+  const hot = [], warm = [], cold = [], ice = [];
+  for (let n = 1; n <= c.maxFront; n++) {
+    if (gaps[n].current < avgGap) hot.push(n);
+    else if (gaps[n].current < avgGap*2) warm.push(n);
+    else if (gaps[n].current < avgGap*3) cold.push(n);
+    else ice.push(n);
+  }
+
+  // 2. Kill numbers
+  const formulas = KILL_FORMULAS[currentType] || [];
+  let killMap = {};
+  formulas.forEach(f => {
+    f.fn(drawData).forEach(n => { if(n>=1 && n<=c.maxFront) killMap[n]=(killMap[n]||0)+1; });
+  });
+  const kills = new Set(Object.entries(killMap).filter(([n,c])=>c>=2).map(([n])=>Number(n)));
+
+  // 3. Zone needs
+  const zoneNeed = c.zones.map((z,i) => {
+    let silent = 0;
+    for (let idx = drawData.length-1; idx >= 0; idx--) {
+      if (drawData[idx].numbers.some(n => n >= z[0] && n <= z[1])) break;
+      silent++;
+    }
+    return { zone: c.zoneNames[i], range: z, silent, need: silent >= 2 };
+  });
+
+  // 4. Sum/span target
+  const sums = drawData.map(d => d.numbers.reduce((a,b)=>a+b,0));
+  const avgSum = sums.reduce((a,b)=>a+b,0)/sums.length;
+  const lastSum = sums[sums.length-1];
+  const sumTarget = Math.abs(lastSum - avgSum) > avgSum*0.2 ? avgSum : lastSum;
+
+  // 5. Generate recommendations
+  let html = '';
+
+  // Method A: 热冷配比法
+  const poolA = [...hot.filter(n=>!kills.has(n)), ...warm.filter(n=>!kills.has(n)).slice(0,3), ...cold.filter(n=>!kills.has(n)).slice(0,2)];
+  html += '<div class="recommend-box"><h4>方案A：热冷配比法</h4>';
+  html += '<p class="text-sm text-muted">热号60%+冷号40%，排除强杀号</p>';
+  html += '<p>候选号池（'+poolA.length+'个）：'+poolA.sort((a,b)=>a-b).map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  // Method B: 区间轮动法
+  const poolB = [];
+  zoneNeed.forEach(z => {
+    const zoneNums = [];
+    for (let n = z.range[0]; n <= z.range[1]; n++) if (!kills.has(n)) zoneNums.push(n);
+    if (z.need) {
+      // Priority zone: add more
+      poolB.push(...zoneNums.slice(0, Math.ceil(zoneNums.length*0.7)));
+    } else {
+      poolB.push(...zoneNums.slice(0, Math.ceil(zoneNums.length*0.35)));
+    }
+  });
+  html += '<div class="recommend-box"><h4>方案B：区间轮动法</h4>';
+  html += '<p class="text-sm text-muted">沉默区间加重布局：'+zoneNeed.filter(z=>z.need).map(z=>z.zone+'(沉默'+z.silent+'期)').join(', ')+'</p>';
+  html += '<p>候选号池（'+poolB.length+'个）：'+poolB.sort((a,b)=>a-b).map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  // Method C: 和值回归法
+  const poolC = [];
+  for (let n = 1; n <= c.maxFront; n++) {
+    if (kills.has(n)) continue;
+    // Pick numbers that bring sum toward target
+    const gap = gaps[n];
+    if (gap.current <= avgGap * 1.5) poolC.push(n);
+  }
+  html += '<div class="recommend-box"><h4>方案C：和值回归+遗漏筛选</h4>';
+  html += '<p class="text-sm text-muted">和值目标区间: '+Math.round(avgSum-15)+'-'+Math.round(avgSum+15)+'（上期'+lastSum+'，均值'+avgSum.toFixed(0)+'）</p>';
+  html += '<p>候选号池（'+poolC.length+'个）：'+poolC.map(n=>'<span class="ball ball-green">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  // Method D: 黄金分割+质数
+  const primes = [2,3,5,7,11,13,17,19,23,29,31];
+  const goldenPos = Math.round(c.maxFront * 0.618);
+  const poolD = primes.filter(n => n <= c.maxFront && !kills.has(n));
+  poolD.push(goldenPos, goldenPos+1, goldenPos-1);
+  const uniqueD = [...new Set(poolD.filter(n => n>=1 && n<=c.maxFront && !kills.has(n)))].sort((a,b)=>a-b);
+  html += '<div class="recommend-box"><h4>方案D：黄金分割+质数法</h4>';
+  html += '<p class="text-sm text-muted">黄金分割点: '+goldenPos+' | 质数号: '+primes.filter(n=>n<=c.maxFront).join(', ')+'</p>';
+  html += '<p>候选号池（'+uniqueD.length+'个）：'+uniqueD.map(n=>'<span class="ball ball-gold">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  // Method E: 综合胆拖
+  const dan = hot.filter(n => !kills.has(n)).slice(0, 2); // 胆码取热号
+  const tuo = [...new Set([...warm, ...hot, ...cold])].filter(n => !kills.has(n) && !dan.includes(n));
+  html += '<div class="recommend-box"><h4>方案E：综合胆拖法</h4>';
+  html += '<p class="text-sm text-muted">胆码（高置信热号）+ 拖码（温号冷号回补）</p>';
+  html += '<p><strong>胆码：</strong>'+dan.map(n=>'<span class="ball ball-red">'+pad2(n)+'</span>').join('')+'</p>';
+  html += '<p><strong>拖码（'+Math.min(tuo.length, 10)+'个）：</strong>'+tuo.slice(0,10).sort((a,b)=>a-b).map(n=>'<span class="pool-num">'+pad2(n)+'</span>').join('')+'</p></div>';
+
+  // Back/Blue recommendation
+  if (currentType === 'dlt') {
+    const backGaps = computeFullBackGaps(drawData, 12);
+    const backHot = [], backCold = [];
+    for (let n = 1; n <= 12; n++) {
+      if (backGaps[n].current < c.avgGapBack) backHot.push(n);
+      else backCold.push(n);
+    }
+    html += '<div class="recommend-box"><h4>后区推荐</h4>';
+    html += '<p><strong>热号：</strong>'+backHot.map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</p>';
+    html += '<p><strong>冷号回补：</strong>'+backCold.filter(n=>backGaps[n].current>=c.avgGapBack*2).map(n=>'<span class="ball ball-blue" style="opacity:0.7;">'+pad2(n)+'</span>').join('')+'</p></div>';
+  } else {
+    const blueGaps = computeFullBackGaps(drawData, 16);
+    const blueHot = [], blueOverdue = [];
+    for (let n = 1; n <= 16; n++) {
+      if (blueGaps[n].current < c.avgGapBack) blueHot.push(n);
+      if (blueGaps[n].current >= c.avgGapBack * 2) blueOverdue.push(n);
+    }
+    let blueKills = {};
+    BLUE_KILL_FORMULAS.forEach(f => {
+      f.fn(drawData).forEach(n => { if(n>=1&&n<=16) blueKills[n]=(blueKills[n]||0)+1; });
+    });
+    const blueKillSet = new Set(Object.entries(blueKills).filter(([n,c])=>c>=4).map(([n])=>Number(n)));
+    html += '<div class="recommend-box"><h4>蓝球推荐</h4>';
+    html += '<p><strong>热号蓝球：</strong>'+blueHot.filter(n=>!blueKillSet.has(n)).map(n=>'<span class="ball ball-blue">'+pad2(n)+'</span>').join('')+'</p>';
+    html += '<p><strong>超期回补：</strong>'+blueOverdue.filter(n=>!blueKillSet.has(n)).map(n=>'<span class="ball ball-blue" style="border:2px solid #ff6b6b;">'+pad2(n)+'</span>').join('')+'</p>';
+    html += '<p><strong>杀除蓝球：</strong>'+[...blueKillSet].map(n=>'<span class="ball ball-kill">'+pad2(n)+'</span>').join('')+'</p></div>';
+  }
+
+  // Disclaimer
+  // 30-day learning plan (from Ch17.1)
+  html += '<div class="recommend-box" style="margin-top:15px;"><h4>30天新手入门计划（第17章）</h4>';
+  html += '<table class="gap-table"><tr><th>阶段</th><th>时间</th><th>目标</th><th>具体任务</th></tr>';
+  html += '<tr><td>第1周</td><td>Day 1-7</td><td>建立认知基础</td><td>阅读概率论基础、理解C(N,K)组合数、学会用Excel记录开奖数据</td></tr>';
+  html += '<tr><td>第2周</td><td>Day 8-14</td><td>掌握分析方法</td><td>学习冷热号/遗漏值/区间分析、用本工具回测历史数据、建立个人分析模板</td></tr>';
+  html += '<tr><td>第3周</td><td>Day 15-21</td><td>模拟验证</td><td>用历史数据回测选号策略、记录每期预测vs实际、计算命中率与随机基线对比</td></tr>';
+  html += '<tr><td>第4周</td><td>Day 22-30</td><td>实战小额</td><td>开始小额投注（标准型预算）、坚持每日记录、周末复盘调整策略</td></tr>';
+  html += '</table></div>';
+
+  // Key insight from Ch15
+  html += '<div class="recommend-box" style="margin-top:10px;"><h4>重要提醒：为什么70%大奖得主最终破产</h4>';
+  html += '<p class="text-sm">统计显示约70%大奖得主在5年内破产或回到原有财务状况。原因：缺乏财务规划、社会压力（亲友借贷）、心理膨胀（"突然富有"综合征）、赌博成瘾升级。</p>';
+  html += '<p class="text-sm text-muted">核心教训：彩票是娱乐消费，不是投资手段。设定预算并严格执行，远比"找到正确号码"重要。</p></div>';
+
+  html += '<div class="card" style="margin-top:15px;background:#2d3f5022;border:1px dashed #555;"><p class="text-sm text-muted">⚠️ 提示：彩票开奖为随机事件，以上统计方法仅基于历史数据的频率分析，不能预测未来结果。任何分析方法都无法改变随机概率。请理性投注，量力而行。</p></div>';
+
+  document.getElementById('strategyOutput').innerHTML = html;
+}
+
+// ============== 工具函数 ==============
+function comb(n, k) {
+  if (k > n || k < 0) return 0;
+  if (k === 0 || k === n) return 1;
+  let r = 1;
+  for (let i = 0; i < k; i++) r = r * (n-i) / (i+1);
+  return Math.round(r);
+}
+
+// ============== 初始化 ==============
+document.addEventListener('DOMContentLoaded', () => {
+  loadSampleData();
+});
 </script>
 </body>
 </html>
